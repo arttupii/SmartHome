@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="themes/SmartHome.min.css" />
+	<link rel="stylesheet" href="themes/jquery.mobile.icons.min.css" />
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile.structure-1.4.5.min.css" />
+	<script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+</head>
+<body>
+<script>
+
+function fetchConfig(callBack) {
+  $.getJSON( "config", {
+    tags: "mount rainier",
+    tagmode: "any",
+    format: "json"
+  })
+    .done(callBack);	
+}
+
+function sendUpdateDevice(device) {
+  $.getJSON( "config", {
+    update: device,
+    format: "json"
+  })
+    .done(function(data){
+			
+	});	
+}
+
+(function() {
+  fetchConfig(function( data ) {
+      data.forEach(function(device){
+		$(".devices").append(addDevice(device));
+		createEventHandlers(device);
+	  });
+	  
+	  $(".devices").enhanceWithin();
+	  refleshUI(data, "full");
+	  refreshUiAjax();
+    });
+})();
+
+function refreshUiAjax() {
+	fetchConfig(function(data){
+		refleshUI(data);	
+		setTimeout(refreshUiAjax,5000);
+	});
+} 
+
+function createEventHandlers(device) {
+	function eventChange() {
+		console.info("Change event");
+		
+		var update = { 
+			"id": device.id,
+			"powerOn": $("#flipswitch-checkbox-" + device.id + "-powerOn").is(":checked"),
+			"event": {
+				"timeOn": $("#time-" + device.id + "-on").val(),
+				"timeOff": $("#time-" + device.id + "-off").val(),
+				"repeatingEvent": {
+					"ma": $("#checkbox-" + device.id + "-ma").is(":checked"),
+					"tu": $("#checkbox-" + device.id + "-tu").is(":checked"),
+					"we": $("#checkbox-" + device.id + "-we").is(":checked"),
+					"th": $("#checkbox-" + device.id + "-th").is(":checked"),
+					"fr": $("#checkbox-" + device.id + "-fr").is(":checked"),
+					"sa": $("#checkbox-" + device.id + "-sa").is(":checked"),
+					"su": $("#checkbox-" + device.id + "-su").is(":checked")
+				}
+			}
+		}
+		sendUpdateDevice(update);
+	}
+	
+	$( "#checkbox-" + device.id + "-ma" ).change(eventChange);
+	$( "#checkbox-" + device.id + "-tu" ).change(eventChange);
+	$( "#checkbox-" + device.id + "-we" ).change(eventChange);
+	$( "#checkbox-" + device.id + "-th" ).change(eventChange);
+	$( "#checkbox-" + device.id + "-fr" ).change(eventChange);
+	$( "#checkbox-" + device.id + "-la" ).change(eventChange);
+	$( "#checkbox-" + device.id + "-su" ).change(eventChange);
+	
+	$("#time-" + device.id + "-on").change(eventChange);
+	$("#time-" + device.id + "-off").change(eventChange);
+	
+	$("#flipswitch-checkbox-" + device.id + "-powerOn").change(eventChange);
+}
+
+function refleshUI(devices, coverage) {
+	devices.forEach(function(device){
+		console.info("Refresh");
+		$("#checkbox-" + device.id + "-ma").attr('checked', device.event.repeatingEvent.ma).checkboxradio('refresh');
+		$("#checkbox-" + device.id + "-tu").attr('checked', device.event.repeatingEvent.tu).checkboxradio('refresh');
+		$("#checkbox-" + device.id + "-we").attr('checked', device.event.repeatingEvent.we).checkboxradio('refresh');
+		$("#checkbox-" + device.id + "-th").attr('checked', device.event.repeatingEvent.th).checkboxradio('refresh');
+		$("#checkbox-" + device.id + "-fr").attr('checked', device.event.repeatingEvent.fr).checkboxradio('refresh');
+		$("#checkbox-" + device.id + "-la").attr('checked', device.event.repeatingEvent.la).checkboxradio('refresh');
+		$("#checkbox-" + device.id + "-su").attr('checked', device.event.repeatingEvent.su).checkboxradio('refresh');
+
+		if(coverage==="full") {
+			$("#time-" + device.id + "-on").val(device.event.timeOn);
+			$("#time-" + device.id + "-off").val(device.event.timeOff);
+		}
+
+
+		$("#flipswitch-checkbox-" + device.id + "-powerOn").attr('checked', device.powerOn).flipswitch( "refresh" );	
+		$("#flipswitch-checkbox-" + device.id + "-powerOn").prop('checked', device.powerOn).flipswitch( "refresh" );
+	});
+}
+
+function addDevice(device) {
+  var html = '<div data-role="collapsible" class="device-$ID" id="device-$ID" data-content-theme="a" >\
+	<h4>$DEVICE_NAME</h4>\
+	<form>\
+	    <label for="time-$ID-on">Päälle</label><input type="time" data-clear-btn="false" name="time-$ID-on" id="time-$ID-on" value="">\
+	    <label for="time-$ID-off">Pois päältä</label><input type="time" data-clear-btn="true" name="time-$ID-off" id="time-$ID-off" value="">\
+	</form>\
+	\
+	<form>\
+	    <fieldset data-role="controlgroup" data-type="horizontal" style="text-align: center">\
+	        <input type="checkbox" name="checkbox-$ID-ma" id="checkbox-$ID-ma"><label for="checkbox-$ID-ma">Ma</label>\
+	        <input type="checkbox" name="checkbox-$ID-tu" id="checkbox-$ID-tu"><label for="checkbox-$ID-tu">Ti</label>\
+	        <input type="checkbox" name="checkbox-$ID-we" id="checkbox-$ID-we"><label for="checkbox-$ID-we">Ke</label>\
+			<input type="checkbox" name="checkbox-$ID-th" id="checkbox-$ID-th"><label for="checkbox-$ID-th">To</label>\
+			<input type="checkbox" name="checkbox-$ID-fr" id="checkbox-$ID-fr"><label for="checkbox-$ID-fr">Pe</label>\
+			<input type="checkbox" name="checkbox-$ID-sa" id="checkbox-$ID-sa"><label for="checkbox-$ID-sa">La</label>\
+			<input type="checkbox" name="checkbox-$ID-su" id="checkbox-$ID-su"><label for="checkbox-$ID-su">Su</label>\
+	    </fieldset>\
+	</form>\
+	\
+	<form><div data-role="fieldcontain"> \
+	    <label for="flipswitch-checkbox-$ID-powerOn">Kytkimen tila:</label>\
+	    <input type="flipswitch-checkbox" data-role="flipswitch" name="flipswitch-checkbox-$ID-powerOn" id="flipswitch-checkbox-$ID-powerOn">\
+	<div data-role="fieldcontain"></form>\
+	</div>';
+
+	function replaceAll(find, replace) {
+		while(html.indexOf(find)!==-1) {
+			html = html.replace(find, replace);
+		}
+	}
+	replaceAll("$DEVICE_NAME", device.name);
+	replaceAll("$ID", device.id);
+	
+	return html;
+}
+
+</script>
+
+<div class="devices" style="color:#0000FF">
+</div>
+
+</body>
+</html>
+

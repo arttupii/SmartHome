@@ -1,0 +1,78 @@
+[
+    {
+        "id": 0,
+        "name": "Auton lämmitin",
+        "powerOn": false,
+        "dim": 0,
+        "event": {
+            "timeOn": "08:48",
+            "timeOff": "11:48",
+            "repeatingEvent": {
+                "ma": false,
+                "tu": false,
+                "we": true,
+                "th": true,
+                "fr": true,
+                "sa": false,
+                "su": false
+            }
+        }
+    },
+    {
+        "id": 1,
+        "name": "Kytkin1",
+        "powerOn": false,
+        "dim": 0,
+        "event": {
+            "timeOn": "",
+            "timeOff": "",
+            "repeatingEvent": {
+                "ma": false,
+                "tu": false,
+                "we": false,
+                "th": false,
+                "fr": false,
+                "sa": false,
+                "su": false
+            }
+        }
+    },
+    {
+        "id": 2,
+        "name": "Kytkin2",
+        "powerOn": false,
+        "dim": 0,
+        "event": {
+            "timeOn": "",
+            "timeOff": "",
+            "repeatingEvent": {
+                "ma": false,
+                "tu": false,
+                "we": false,
+                "th": false,
+                "fr": false,
+                "sa": false,
+                "su": false
+            }
+        }
+    },
+    {
+        "id": 3,
+        "name": "Kytkin3",
+        "powerOn": false,
+        "dim": 0,
+        "event": {
+            "timeOn": "",
+            "timeOff": "",
+            "repeatingEvent": {
+                "ma": false,
+                "tu": false,
+                "we": false,
+                "th": false,
+                "fr": false,
+                "sa": false,
+                "su": false
+            }
+        }
+    }
+]
