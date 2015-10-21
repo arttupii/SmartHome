@@ -2,6 +2,8 @@ var _ = require('underscore');
 var express = require('express');
 var fs = require('fs');
 var config = JSON.parse(fs.readFileSync("./config.json"));
+var mysql = require('./mysql');
+
 //var SerialPort = require("serialport").SerialPort
 var arduino = require("./arduino"); 
 var Promise = require('bluebird');
