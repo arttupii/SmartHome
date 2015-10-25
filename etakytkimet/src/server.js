@@ -2,24 +2,18 @@ var _ = require('underscore');
 var express = require('express');
 var fs = require('fs');
 var config = JSON.parse(fs.readFileSync("./config.json"));
-
-
-//var SerialPort = require("serialport").SerialPort
-//var arduino = require("./arduino"); 
 var Promise = require('bluebird');
 var nexa = require('nexa');
 
 var server = express();
 server.use(express.static('./public'));
+
+//Tansmitter is connected to GPIO6
 nexa.nexaInit(6);
 
+var controller_id = 4982814;
+
 var port = 8080;
-/*
-var serialPort = new SerialPort("\\\\.\\COM10"/"/dev/tty-usbserial1", {
-  baudrate: 57600,
-  parser: serialport.parsers.readline("\n")
-}, true); // this is the openImmediately flag [default is true] 
- */
 
 server.listen(port, function() {
     console.log('server listening on port ' + port);
@@ -59,84 +53,82 @@ server.get('/config', function (req, res) {
     }
     res.send(config);
 });
-
-/*
-	{
-		"id": 0,
-		"name": "Auton lämmitin",
-		"powerOn": 0,
-		"dim": 0,
-		"event": {
-			"timeOn": "",
-			"timeOff": "",
-			"repeatingEvent": {
-				"ma": false,
-				"tu": false,
-				"we": false,
-				"th": false,
-				"sa": false,
-				"su": false
-			}
-		}
-	},	
-*/
-var serialportOpen= true;
-				
+			
 function sendPortStatesToTarget() {
-	function serialPortCmd(cmd) {
-		//return arduino.sendCmdAndWaitReply(cmd);
-	}
-	
-	function isNow(timeStr) {
-		var now = new Date();
-		var t = timeStr.split(":");
-		var ret = parseInt(t[0]) === now.getHours() && parseInt(t[1]) === now.getMinutes();
-		//console.info("isNow(), %d:%d <--> %d:%d   --> ret=%d", t[0], t[1], now.getHours(), now.getMinutes(), ret);
-	}
 	return Promise.each(config, function (device){
-		//console.info("total %s, device%s", total, device);
-		if(isNow(device.event.timeOn)) {
-			if(device.event.repeatingEvent.ma || device.event.repeatingEvent.tu || 
-			device.event.repeatingEvent.we || device.event.repeatingEvent.th || 
-			device.event.repeatingEvent.fr || device.event.repeatingEvent.sa  || 
-			device.event.repeatingEvent.su ) {
-				var now = new Date();
-				switch(now.getDay()) {
-					case 0: if(device.event.repeatingEvent.su) {device.powerOn = true;} break;
-					case 1: if(device.event.repeatingEvent.mo) {device.powerOn = true;} break;
-					case 2: if(device.event.repeatingEvent.tu) {device.powerOn = true;} break;
-					case 3: if(device.event.repeatingEvent.we) {device.powerOn = true;} break;
-					case 4: if(device.event.repeatingEvent.th) {device.powerOn = true;} break;
-					case 5: if(device.event.repeatingEvent.fr) {device.powerOn = true;} break;
-					case 6: if(device.event.repeatingEvent.sa) {device.powerOn = true;} break;
-				}	
-			} else {
-				device.event.timeOn = "";
-				device.powerOn = true;
-			}
-		}
-		
 		if(device.powerOn) {
 			if(device.dim>0) {
-			      nexa.nexaDim(4982814, device.id,device.dim);
+			      nexa.nexaDim(controller_id, device.id,device.dim);
 				return serialPortCmd("dim " + device.id + " " + device.dim + "\n");
 			} else {
-				nexa.nexaOn(4982814, device.id);
+				nexa.nexaOn(controller_id, device.id);
 			}
 		} else {
-			nexa.nexaOff(4982814, device.id);;
+			nexa.nexaOff(controller_id, device.id);;
 		}
 	}).catch(function (err){
 		console.error(err);
 	});
 }
 
+function checkTimers() {
+	return function() {
+		function isNow(timeStr) {
+			var now = new Date();
+			var t = timeStr.split(":");
+			var ret = parseInt(t[0]) === now.getHours() && parseInt(t[1]) === now.getMinutes();
+			//console.info("isNow(), %d:%d <--> %d:%d   --> ret=%d", t[0], t[1], now.getHours(), now.getMinutes(), ret);
+			return ret;
+		}
+		
+		function updatePowerOffState(device, state) {
+			console.info("Update device to %s", state);
+			device.powerOn = state; 
+			powerOffChangeDetected=true;
+			fs.writeFileSync("./config.json", JSON.stringify(config,0,4));
+		}
+		
+		return Promise.each(config, function (device){
+			var isTimeOn = isNow(device.event.timeOn);
+			var isTimeOff = isNow(device.event.timeOff);
+			
+			if( isTimeOn && device.powerOn===false || isTimeOff && device.powerOn===true ) {
+				var setPowerOn = true;
+				if(isTimeOff) setPowerOn = false;
+				
+				if(device.event.repeatingEvent.ma || device.event.repeatingEvent.tu || 
+				device.event.repeatingEvent.we || device.event.repeatingEvent.th || 
+				device.event.repeatingEvent.fr || device.event.repeatingEvent.sa  || 
+				device.event.repeatingEvent.su ) {
+					var now = new Date();
+					switch(now.getDay()) {
+						case 0: if(device.event.repeatingEvent.su) {updatePowerOffState(device, setPowerOn);} break;
+						case 1: if(device.event.repeatingEvent.mo) {updatePowerOffState(device, setPowerOn);} break;
+						case 2: if(device.event.repeatingEvent.tu) {updatePowerOffState(device, setPowerOn);} break;
+						case 3: if(device.event.repeatingEvent.we) {updatePowerOffState(device, setPowerOn);} break;
+						case 4: if(device.event.repeatingEvent.th) {updatePowerOffState(device, setPowerOn);} break;
+						case 5: if(device.event.repeatingEvent.fr) {updatePowerOffState(device, setPowerOn);} break;
+						case 6: if(device.event.repeatingEvent.sa) {updatePowerOffState(device, setPowerOn);} break;
+					}	
+				} else {
+					if(isTimeOn) device.event.timeOn = "";
+					if(isTimeOff) device.event.timeOff = "";
+					updatePowerOffState(device, setPowerOn);
+				}
+			}
+		}).catch(function (err){
+			console.error(err);
+		});	
+	}
+}
+
 var updaloopCnt=1;
 function updateLoop() {
 	return Promise.delay(1000)
+		.then(checkTimers())
 		.then(function(){
 			updaloopCnt++;
-			if(updaloopCnt>=30 || powerOffChangeDetected) {
+			if(updaloopCnt>=60 || powerOffChangeDetected) {
 				powerOffChangeDetected = false;
 				updaloopCnt = 0;
 				return sendPortStatesToTarget();

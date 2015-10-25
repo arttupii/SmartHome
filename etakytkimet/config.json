@@ -5,8 +5,8 @@
         "powerOn": false,
         "dim": 0,
         "event": {
-            "timeOn": "",
-            "timeOff": "",
+            "timeOn": "18:44",
+            "timeOff": "18:36",
             "repeatingEvent": {
                 "ma": false,
                 "tu": false,
