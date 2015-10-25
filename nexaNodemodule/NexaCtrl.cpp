@@ -6,10 +6,10 @@
  */
 
 #include "NexaCtrl.h"
-#include "raspberryio.h"
 #include <stdio.h>
 #include <stdlib.h>     /* calloc, exit, free */
 
+#include <wiringPi.h>
 
 /*
 extern "C" {
@@ -42,12 +42,21 @@ const int NexaCtrl::kDeviceIdLength = 4;
 const int NexaCtrl::kDimOffset = 32;
 const int NexaCtrl::kDimLength = 4;
 
+#include <wiringPi.h>
+
+void sei(){
+//  piHiPri(0);
+}
+void cli(){
+//  piHiPri(80);
+}
 
 NexaCtrl::NexaCtrl(unsigned int tx_pin)
 {
     tx_pin_ = tx_pin;
+    printf ("!!!!NexaCtrl %d\n",wiringPiSetup () );
 
-    pinMode(tx_pin_, OUTPUT);
+    pinMode (tx_pin, OUTPUT) ;
 
     // kLowPulseLength + kDimLength because we need room for dim bits if
     // we want to transmit a dim signal

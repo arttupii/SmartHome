@@ -1,9 +1,9 @@
 {
-  "name": "hello_world",
-  "version": "0.0.0",
-  "description": "Node.js Addons Example #1",
-  "main": "hello.js",
-  "private": true,
+  "name": "nexa",
+  "version": "0.1.0",
+  "description": "NodeJs nexaCtrl node module",
+  "main": "nexa.js",
+  "private": false,
   "scripts": {
     "test": "node hello.js"
   },

@@ -72,6 +72,75 @@ void NexaOff(const FunctionCallbackInfo<Value>& args) {
 	args.GetReturnValue().Set(0);
 }
 
+void NexaPairing(const FunctionCallbackInfo<Value>& args) {
+	Isolate* isolate = Isolate::GetCurrent();
+	HandleScope scope(isolate);
+
+	if (args.Length() < 2) {
+		isolate->ThrowException(Exception::TypeError(
+				String::NewFromUtf8(isolate, "Wrong number of arguments")));
+		return;
+	}
+	
+	if (!args[0]->IsNumber() || !args[1]->IsNumber()) {
+		isolate->ThrowException(Exception::TypeError(
+				String::NewFromUtf8(isolate, "Wrong arguments")));
+		return;
+	}
+
+	if(nexaCtrl==NULL) {
+		isolate->ThrowException(Exception::TypeError(
+				String::NewFromUtf8(isolate, "Nexa is not initialized")));
+		return;
+	}
+	
+	unsigned int controller_id = (int)args[0]->NumberValue();
+	unsigned int device_id = (int)args[1]->NumberValue();
+	
+	printf("NexaPairing: controller_id=%d, device_id=%d\n", controller_id, device_id);
+	
+	for(int i=0;i<10;i++) {
+	  nexaCtrl->DeviceOn(controller_id, device_id);
+	}
+	
+	args.GetReturnValue().Set(0);
+}
+
+void NexaUnpairing(const FunctionCallbackInfo<Value>& args) {
+	Isolate* isolate = Isolate::GetCurrent();
+	HandleScope scope(isolate);
+
+	if (args.Length() < 2) {
+		isolate->ThrowException(Exception::TypeError(
+				String::NewFromUtf8(isolate, "Wrong number of arguments")));
+		return;
+	}
+	
+	if (!args[0]->IsNumber() || !args[1]->IsNumber()) {
+		isolate->ThrowException(Exception::TypeError(
+				String::NewFromUtf8(isolate, "Wrong arguments")));
+		return;
+	}
+
+	if(nexaCtrl==NULL) {
+		isolate->ThrowException(Exception::TypeError(
+				String::NewFromUtf8(isolate, "Nexa is not initialized")));
+		return;
+	}
+	
+	unsigned int controller_id = (int)args[0]->NumberValue();
+	unsigned int device_id = (int)args[1]->NumberValue();
+	
+	printf("NexaUnpairing: controller_id=%d, device_id=%d\n", controller_id, device_id);
+	
+	for(int i=0;i<10;i++) {
+	  nexaCtrl->DeviceOff(controller_id, device_id);
+	}
+	
+	args.GetReturnValue().Set(0);
+}
+
+
 void NexaDim(const FunctionCallbackInfo<Value>& args) {
 	Isolate* isolate = Isolate::GetCurrent();
 	HandleScope scope(isolate);
@@ -141,6 +210,10 @@ void Init(Handle<Object> exports) {
 			FunctionTemplate::New(isolate, Method)->GetFunction());
 	exports->Set(String::NewFromUtf8(isolate, "nexaInit"),
 			FunctionTemplate::New(isolate, NexaInit)->GetFunction());
+	exports->Set(String::NewFromUtf8(isolate, "nexaPairing"),
+			FunctionTemplate::New(isolate, NexaPairing)->GetFunction());
+	exports->Set(String::NewFromUtf8(isolate, "nexaUnpairing"),
+			FunctionTemplate::New(isolate, NexaUnpairing)->GetFunction());
 }
 
 NODE_MODULE(nexa, Init)

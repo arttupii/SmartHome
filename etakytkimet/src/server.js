@@ -2,16 +2,18 @@ var _ = require('underscore');
 var express = require('express');
 var fs = require('fs');
 var config = JSON.parse(fs.readFileSync("./config.json"));
-var mysql = require('./mysql');
+
 
 //var SerialPort = require("serialport").SerialPort
-var arduino = require("./arduino"); 
+//var arduino = require("./arduino"); 
 var Promise = require('bluebird');
+var nexa = require('nexa');
 
 var server = express();
 server.use(express.static('./public'));
- 
-var port = 80;
+nexa.nexaInit(6);
+
+var port = 8080;
 /*
 var serialPort = new SerialPort("\\\\.\\COM10"/"/dev/tty-usbserial1", {
   baudrate: 57600,
@@ -82,7 +84,7 @@ var serialportOpen= true;
 				
 function sendPortStatesToTarget() {
 	function serialPortCmd(cmd) {
-		return arduino.sendCmdAndWaitReply(cmd);
+		//return arduino.sendCmdAndWaitReply(cmd);
 	}
 	
 	function isNow(timeStr) {
@@ -116,12 +118,13 @@ function sendPortStatesToTarget() {
 		
 		if(device.powerOn) {
 			if(device.dim>0) {
+			      nexa.nexaDim(4982814, device.id,device.dim);
 				return serialPortCmd("dim " + device.id + " " + device.dim + "\n");
 			} else {
-				return serialPortCmd("on " + device.id + "\n");
+				nexa.nexaOn(4982814, device.id);
 			}
 		} else {
-			return serialPortCmd("off " + device.id + "\n");
+			nexa.nexaOff(4982814, device.id);;
 		}
 	}).catch(function (err){
 		console.error(err);
@@ -133,7 +136,7 @@ function updateLoop() {
 	return Promise.delay(1000)
 		.then(function(){
 			updaloopCnt++;
-			if(updaloopCnt>=5 || powerOffChangeDetected) {
+			if(updaloopCnt>=30 || powerOffChangeDetected) {
 				powerOffChangeDetected = false;
 				updaloopCnt = 0;
 				return sendPortStatesToTarget();

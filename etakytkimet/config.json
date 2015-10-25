@@ -5,14 +5,14 @@
         "powerOn": false,
         "dim": 0,
         "event": {
-            "timeOn": "08:48",
-            "timeOff": "11:48",
+            "timeOn": "",
+            "timeOff": "",
             "repeatingEvent": {
                 "ma": false,
                 "tu": false,
-                "we": true,
-                "th": true,
-                "fr": true,
+                "we": false,
+                "th": false,
+                "fr": false,
                 "sa": false,
                 "su": false
             }
