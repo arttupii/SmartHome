@@ -4,6 +4,8 @@ var fs = require('fs');
 var config = JSON.parse(fs.readFileSync("./config.json"));
 var Promise = require('bluebird');
 var nexa = require('nexa');
+var ns = require('nested-structure');
+var toDot = require('to-dot');
 
 var server = express();
 server.use(express.static('./public'));
@@ -21,33 +23,34 @@ server.listen(port, function() {
 
 var powerOffChangeDetected=false;
 
+function valueFix(value){
+	switch(value) {
+		case "true": return true;
+		case "false": return false;
+		case "": return "";
+		default: return isNaN(value)?value:parseFloat(value);
+	}
+}
+
 server.get('/config', function (req, res) {
 	function booleanConvert(str) {
 		if(str==="true") return true;
 		return false;
 	}
+		
     if(!_.isEmpty(req.query)) {
 		console.info(JSON.stringify(req.query));
 
         if(req.query.update!==undefined) {
-			for(var i=0;i<config.length;i++){
-				if(parseInt(config[i].id)===parseInt(req.query.update.id)) {
-					if(config[i].powerOn !== booleanConvert(req.query.update.powerOn)) {
-						powerOffChangeDetected = true;
-					}
-					config[i].powerOn = booleanConvert(req.query.update.powerOn);
-					config[i].event.timeOn = req.query.update.event.timeOn;
-					config[i].event.timeOff = req.query.update.event.timeOff;
-					config[i].event.repeatingEvent.ma = booleanConvert(req.query.update.event.repeatingEvent.ma);
-					config[i].event.repeatingEvent.tu = booleanConvert(req.query.update.event.repeatingEvent.tu);
-					config[i].event.repeatingEvent.we = booleanConvert(req.query.update.event.repeatingEvent.we);
-					config[i].event.repeatingEvent.th = booleanConvert(req.query.update.event.repeatingEvent.th);
-					config[i].event.repeatingEvent.fr = booleanConvert(req.query.update.event.repeatingEvent.fr);
-					config[i].event.repeatingEvent.sa = booleanConvert(req.query.update.event.repeatingEvent.sa);
-					config[i].event.repeatingEvent.su = booleanConvert(req.query.update.event.repeatingEvent.su);
+			var dotNotations = toDot(req.query.update);
+			_.keys(dotNotations).forEach(function(dot){
+				if(dot.indexOf("dummy")===-1) {
+					var value = valueFix(dotNotations[dot]);
+					console.info(dot + " " + value);
+					ns(config).set(dot, value);
+					powerOffChangeDetected = true;
 				}
-				
-			};
+			});
 			fs.writeFileSync("./config.json", JSON.stringify(config,0,4));
 		}
     }
@@ -55,7 +58,8 @@ server.get('/config', function (req, res) {
 });
 			
 function sendPortStatesToTarget() {
-	return Promise.each(config, function (device){
+	return Promise.each(_.values(config.devices), function (device){
+		console.info(JSON.stringify(device))
 		if(device.powerOn) {
 			if(device.dim>0) {
 			      nexa.nexaDim(controller_id, device.id,device.dim);
@@ -67,6 +71,7 @@ function sendPortStatesToTarget() {
 			nexa.nexaOff(controller_id, device.id);;
 		}
 	}).catch(function (err){
+		console.info("KAKKA")
 		console.error(err);
 	});
 }
@@ -88,7 +93,7 @@ function checkTimers() {
 			fs.writeFileSync("./config.json", JSON.stringify(config,0,4));
 		}
 		
-		return Promise.each(config, function (device){
+		return Promise.each(_.values(config.devices), function (device){
 			var isTimeOn = isNow(device.event.timeOn);
 			var isTimeOff = isNow(device.event.timeOff);
 			

@@ -1,78 +1,80 @@
-[
-    {
-        "id": 0,
-        "name": "Auton lämmitin",
-        "powerOn": false,
-        "dim": 0,
-        "event": {
-            "timeOn": "18:44",
-            "timeOff": "18:36",
-            "repeatingEvent": {
-                "ma": false,
-                "tu": false,
-                "we": false,
-                "th": false,
-                "fr": false,
-                "sa": false,
-                "su": false
+{
+    "devices": {
+        "0": {
+            "name": "Auton lämmitin",
+            "powerOn": false,
+            "dim": 0,
+            "event": {
+                "repeatingEvent": {
+                    "ma": false,
+                    "tu": false,
+                    "we": false,
+                    "th": false,
+                    "fr": false,
+                    "sa": false,
+                    "su": false
+                },
+                "timeOn": "",
+                "timeOff": ""
+            },
+            "id": 0
+        },
+        "1": {
+            "id": 1,
+            "name": "Kytkin1",
+            "powerOn": false,
+            "dim": 0,
+            "event": {
+                "timeOn": "",
+                "timeOff": "",
+                "repeatingEvent": {
+                    "ma": false,
+                    "tu": false,
+                    "we": false,
+                    "th": false,
+                    "fr": false,
+                    "sa": false,
+                    "su": false
+                }
             }
-        }
-    },
-    {
-        "id": 1,
-        "name": "Kytkin1",
-        "powerOn": false,
-        "dim": 0,
-        "event": {
-            "timeOn": "",
-            "timeOff": "",
-            "repeatingEvent": {
-                "ma": false,
-                "tu": false,
-                "we": false,
-                "th": false,
-                "fr": false,
-                "sa": false,
-                "su": false
+        },
+        "2": {
+            "id": 2,
+            "name": "Kytkin2",
+            "powerOn": false,
+            "dim": 0,
+            "event": {
+                "timeOn": "",
+                "timeOff": "",
+                "repeatingEvent": {
+                    "ma": false,
+                    "tu": false,
+                    "we": false,
+                    "th": false,
+                    "fr": false,
+                    "sa": false,
+                    "su": false
+                }
             }
-        }
-    },
-    {
-        "id": 2,
-        "name": "Kytkin2",
-        "powerOn": false,
-        "dim": 0,
-        "event": {
-            "timeOn": "",
-            "timeOff": "",
-            "repeatingEvent": {
-                "ma": false,
-                "tu": false,
-                "we": false,
-                "th": false,
-                "fr": false,
-                "sa": false,
-                "su": false
-            }
-        }
-    },
-    {
-        "id": 3,
-        "name": "Kytkin3",
-        "powerOn": false,
-        "dim": 0,
-        "event": {
-            "timeOn": "",
-            "timeOff": "",
-            "repeatingEvent": {
-                "ma": false,
-                "tu": false,
-                "we": false,
-                "th": false,
-                "fr": false,
-                "sa": false,
-                "su": false
+        },
+        "3": {
+            "id": 3,
+            "name": "Kytkin3",
+            "powerOn": false,
+            "dim": 0,
+            "event": {
+                "timeOn": "",
+                "timeOff": "",
+                "repeatingEvent": {
+                    "ma": false,
+                    "tu": false,
+                    "we": false,
+                    "th": false,
+                    "fr": false,
+                    "sa": false,
+                    "su": false
+                }
             }
         }
     }
-]
+}

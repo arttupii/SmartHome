@@ -4,9 +4,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="themes/SmartHome.min.css" />
 	<link rel="stylesheet" href="themes/jquery.mobile.icons.min.css" />
-	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile.structure-1.4.5.min.css" />
-	<script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
-	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+	<link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile.structure-1.4.5.min.css" />
+	<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+	<script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+	<script src="http://underscorejs.org/underscore-min.js"></script>
 </head>
 <body>
 <script>
@@ -32,7 +33,7 @@ function sendUpdateDevice(device) {
 
 (function() {
   fetchConfig(function( data ) {
-      data.forEach(function(device){
+      _.values(data.devices).forEach(function(device){
 		$(".devices").append(addDevice(device));
 		createEventHandlers(device);
 	  });
@@ -54,7 +55,8 @@ function createEventHandlers(device) {
 	function eventChange() {
 		console.info("Change event");
 		
-		var update = { 
+		var update = {"devices":{"dummy":""}};
+		update.devices[device.id] = { 
 			"id": device.id,
 			"powerOn": $("#flipswitch-checkbox-" + device.id + "-powerOn").is(":checked"),
 			"event": {
@@ -70,7 +72,8 @@ function createEventHandlers(device) {
 					"su": $("#checkbox-" + device.id + "-su").is(":checked")
 				}
 			}
-		}
+		};
+		console.info(JSON.stringify(update));
 		sendUpdateDevice(update);
 	}
 	
@@ -79,7 +82,7 @@ function createEventHandlers(device) {
 	$( "#checkbox-" + device.id + "-we" ).change(eventChange);
 	$( "#checkbox-" + device.id + "-th" ).change(eventChange);
 	$( "#checkbox-" + device.id + "-fr" ).change(eventChange);
-	$( "#checkbox-" + device.id + "-la" ).change(eventChange);
+	$( "#checkbox-" + device.id + "-sa" ).change(eventChange);
 	$( "#checkbox-" + device.id + "-su" ).change(eventChange);
 	
 	$("#time-" + device.id + "-on").change(eventChange);
@@ -96,7 +99,7 @@ function refleshUI(devices, coverage) {
 		$("#checkbox-" + device.id + "-we").attr('checked', device.event.repeatingEvent.we).checkboxradio('refresh');
 		$("#checkbox-" + device.id + "-th").attr('checked', device.event.repeatingEvent.th).checkboxradio('refresh');
 		$("#checkbox-" + device.id + "-fr").attr('checked', device.event.repeatingEvent.fr).checkboxradio('refresh');
-		$("#checkbox-" + device.id + "-la").attr('checked', device.event.repeatingEvent.la).checkboxradio('refresh');
+		$("#checkbox-" + device.id + "-sa").attr('checked', device.event.repeatingEvent.sa).checkboxradio('refresh');
 		$("#checkbox-" + device.id + "-su").attr('checked', device.event.repeatingEvent.su).checkboxradio('refresh');
 
 		if(coverage==="full") {
