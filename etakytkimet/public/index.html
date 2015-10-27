@@ -52,47 +52,54 @@ function refreshUiAjax() {
 } 
 
 function createEventHandlers(device) {
-	function eventChange() {
+	function eventChangeDay(day) {
+		console.info("day change event ");
+
+		var update = {"devices":{"dummy":""}};
+		update.devices[device.id] = {"event":{"repeatingEvent":{}}};
+		update.devices[device.id].event.repeatingEvent[day] = $("#checkbox-" + device.id + "-" + day).is(":checked");
+
+		sendUpdateDevice(update);
+	}
+	
+	function eventSwitchChange() {
+		console.info("switch change event");
+		var update = {"devices":{"dummy":""}};
+		update.devices[device.id] = { 
+			"powerOn": $("#flipswitch-checkbox-" + device.id + "-powerOn").is(":checked")
+		};
+		sendUpdateDevice(update);
+	}
+	
+	function eventTimeChange(timer) {
 		console.info("Change event");
 		
 		var update = {"devices":{"dummy":""}};
 		update.devices[device.id] = { 
 			"id": device.id,
 			"powerOn": $("#flipswitch-checkbox-" + device.id + "-powerOn").is(":checked"),
-			"event": {
-				"timeOn": $("#time-" + device.id + "-on").val(),
-				"timeOff": $("#time-" + device.id + "-off").val(),
-				"repeatingEvent": {
-					"ma": $("#checkbox-" + device.id + "-ma").is(":checked"),
-					"tu": $("#checkbox-" + device.id + "-tu").is(":checked"),
-					"we": $("#checkbox-" + device.id + "-we").is(":checked"),
-					"th": $("#checkbox-" + device.id + "-th").is(":checked"),
-					"fr": $("#checkbox-" + device.id + "-fr").is(":checked"),
-					"sa": $("#checkbox-" + device.id + "-sa").is(":checked"),
-					"su": $("#checkbox-" + device.id + "-su").is(":checked")
-				}
-			}
+			"event": {}
 		};
-		console.info(JSON.stringify(update));
+		update.devices[device.id].event[timer] = $("#time-" + device.id + "-" + timer).val();
 		sendUpdateDevice(update);
 	}
 	
-	$( "#checkbox-" + device.id + "-ma" ).change(eventChange);
-	$( "#checkbox-" + device.id + "-tu" ).change(eventChange);
-	$( "#checkbox-" + device.id + "-we" ).change(eventChange);
-	$( "#checkbox-" + device.id + "-th" ).change(eventChange);
-	$( "#checkbox-" + device.id + "-fr" ).change(eventChange);
-	$( "#checkbox-" + device.id + "-sa" ).change(eventChange);
-	$( "#checkbox-" + device.id + "-su" ).change(eventChange);
+	$( "#checkbox-" + device.id + "-ma" ).change(function() {eventChangeDay("ma");});
+	$( "#checkbox-" + device.id + "-tu" ).change(function() {eventChangeDay("tu");});
+	$( "#checkbox-" + device.id + "-we" ).change(function() {eventChangeDay("we");});
+	$( "#checkbox-" + device.id + "-th" ).change(function() {eventChangeDay("th");});
+	$( "#checkbox-" + device.id + "-fr" ).change(function() {eventChangeDay("fr");});
+	$( "#checkbox-" + device.id + "-sa" ).change(function() {eventChangeDay("sa");});
+	$( "#checkbox-" + device.id + "-su" ).change(function() {eventChangeDay("su");});
 	
-	$("#time-" + device.id + "-on").change(eventChange);
-	$("#time-" + device.id + "-off").change(eventChange);
+	$("#time-" + device.id + "-on").change(function() {eventTimeChange("on");});
+	$("#time-" + device.id + "-off").change(function() {eventTimeChange("off");});
 	
-	$("#flipswitch-checkbox-" + device.id + "-powerOn").change(eventChange);
+	$("#flipswitch-checkbox-" + device.id + "-powerOn").change(eventSwitchChange);
 }
 
-function refleshUI(devices, coverage) {
-	devices.forEach(function(device){
+function refleshUI(config, coverage) {
+	_.values(config.devices).forEach(function(device){
 		console.info("Refresh");
 		$("#checkbox-" + device.id + "-ma").attr('checked', device.event.repeatingEvent.ma).checkboxradio('refresh');
 		$("#checkbox-" + device.id + "-tu").attr('checked', device.event.repeatingEvent.tu).checkboxradio('refresh');
