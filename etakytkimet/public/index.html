@@ -7,7 +7,7 @@
 	<link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile.structure-1.4.5.min.css" />
 	<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 	<script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
-	<script src="http://underscorejs.org/underscore-min.js"></script>
+	<script src="underscore-min.js"></script>
 </head>
 <body>
 <script>
@@ -76,11 +76,10 @@ function createEventHandlers(device) {
 		
 		var update = {"devices":{"dummy":""}};
 		update.devices[device.id] = { 
-			"id": device.id,
-			"powerOn": $("#flipswitch-checkbox-" + device.id + "-powerOn").is(":checked"),
 			"event": {}
 		};
-		update.devices[device.id].event[timer] = $("#time-" + device.id + "-" + timer).val();
+		
+		update.devices[device.id].event[timer==="on"?"timeOn":"timeOff"] = $("#time-" + device.id + "-" + timer).val();
 		sendUpdateDevice(update);
 	}
 	

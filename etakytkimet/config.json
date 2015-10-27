@@ -2,22 +2,20 @@
     "devices": {
         "0": {
             "name": "Auton lämmitin",
-            "powerOn": true,
+            "powerOn": false,
             "dim": 0,
             "event": {
                 "repeatingEvent": {
-                    "ma": false,
-                    "tu": false,
-                    "we": false,
-                    "th": false,
-                    "fr": false,
+                    "ma": true,
+                    "tu": true,
+                    "we": true,
+                    "th": true,
+                    "fr": true,
                     "sa": false,
                     "su": false
                 },
-                "timeOn": "",
-                "timeOff": "",
-                "on": "22:00",
-                "off": "23:00"
+                "timeOn": "07:30",
+                "timeOff": "08:30"
             },
             "id": 0
         },
