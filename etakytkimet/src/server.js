@@ -16,6 +16,20 @@ nexa.nexaInit(6);
 var controller_id = 4982814;
 
 var port = 8080;
+require('rconsole')
+console.set({
+  facility: 'local0'      // default: user 
+  , title: 'SmartHome'       // default: node -- can also be set with `process.title` 
+  , highestLevel: 'debug'  // [emerg, alert, crit, err, warning, notice, info, debug] 
+  , stdout: true         // default: false 
+  , stderr: true          // default: true 
+  , syslog: true          // default: true 
+  , syslogHashTags: false // default: false 
+  , showTime: true        // default: true  
+  , showLine: true        // default: true 
+  , showFile: true        // default: true 
+  , showTags: true        // default: true 
+})
 
 server.listen(port, function() {
     console.log('server listening on port ' + port);
@@ -39,16 +53,20 @@ server.get('/config', function (req, res) {
 	}
 		
     if(!_.isEmpty(req.query)) {
-		console.info(JSON.stringify(req.query));
+		//console.info(JSON.stringify(req.query));
 
         if(req.query.update!==undefined) {
 			var dotNotations = toDot(req.query.update);
 			_.keys(dotNotations).forEach(function(dot){
 				if(dot.indexOf("dummy")===-1) {
 					var value = valueFix(dotNotations[dot]);
-					console.info(dot + " " + value);
+					//console.info(dot + " " + value);
 					ns(config).set(dot, value);
-					powerOffChangeDetected = true;
+					if(dot.indexOf("powerOn")!==-1) {
+						console.info("Power state is updated by user. %s=%s", dot, value);
+						powerOffChangeDetected = true;
+					}
+
 				}
 			});
 			fs.writeFileSync("./config.json", JSON.stringify(config,0,4));
@@ -59,19 +77,21 @@ server.get('/config', function (req, res) {
 			
 function sendPortStatesToTarget() {
 	return Promise.each(_.values(config.devices), function (device){
-		console.info(JSON.stringify(device))
-		if(device.powerOn) {
-			if(device.dim>0) {
-			      nexa.nexaDim(controller_id, device.id,device.dim);
-				return serialPortCmd("dim " + device.id + " " + device.dim + "\n");
+		//console.info(JSON.stringify(device))
+		for(var i=0;i<3;i++) {
+			if(device.powerOn) {
+				if(device.dim>0) {
+					  nexa.nexaDim(controller_id, device.id,device.dim);
+					return serialPortCmd("dim " + device.id + " " + device.dim + "\n");
+				} else {
+					nexa.nexaOn(controller_id, device.id);
+				}
 			} else {
-				nexa.nexaOn(controller_id, device.id);
+				nexa.nexaOff(controller_id, device.id);;
 			}
-		} else {
-			nexa.nexaOff(controller_id, device.id);;
 		}
 	}).catch(function (err){
-		console.info("KAKKA")
+		//console.info("KAKKA")
 		console.error(err);
 	});
 }
@@ -87,7 +107,7 @@ function checkTimers() {
 		}
 		
 		function updatePowerOffState(device, state) {
-			console.info("Update device to %s", state);
+			console.info("Update power state to %s (timer), device=%d", state, device.id);
 			device.powerOn = state; 
 			powerOffChangeDetected=true;
 			fs.writeFileSync("./config.json", JSON.stringify(config,0,4));

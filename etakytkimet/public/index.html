@@ -11,7 +11,7 @@
 </head>
 <body>
 <script>
-
+var ignoreUiUpdate = false;
 function fetchConfig(callBack) {
   $.getJSON( "config", {
     tags: "mount rainier",
@@ -58,7 +58,7 @@ function createEventHandlers(device) {
 		var update = {"devices":{"dummy":""}};
 		update.devices[device.id] = {"event":{"repeatingEvent":{}}};
 		update.devices[device.id].event.repeatingEvent[day] = $("#checkbox-" + device.id + "-" + day).is(":checked");
-
+		ignoreUiUpdate = true;
 		sendUpdateDevice(update);
 	}
 	
@@ -68,12 +68,13 @@ function createEventHandlers(device) {
 		update.devices[device.id] = { 
 			"powerOn": $("#flipswitch-checkbox-" + device.id + "-powerOn").is(":checked")
 		};
+		ignoreUiUpdate = true;
 		sendUpdateDevice(update);
 	}
 	
 	function eventTimeChange(timer) {
 		console.info("Change event");
-		
+		ignoreUiUpdate = true;
 		var update = {"devices":{"dummy":""}};
 		update.devices[device.id] = { 
 			"event": {}
@@ -98,6 +99,10 @@ function createEventHandlers(device) {
 }
 
 function refleshUI(config, coverage) {
+	if(ignoreUiUpdate) {
+		ignoreUiUpdate = false;
+		return;
+	}
 	_.values(config.devices).forEach(function(device){
 		console.info("Refresh");
 		$("#checkbox-" + device.id + "-ma").attr('checked', device.event.repeatingEvent.ma).checkboxradio('refresh');

@@ -8,6 +8,7 @@
 	"bluebird": "2.10.2",
 	"nexa": "~0.1.0",
 	"nested-structure": "1.0.4",
-	"to-dot": "0.0.1"
+	"to-dot": "0.0.1",
+	"node-syslog": "1.2.0"
   }
 }
