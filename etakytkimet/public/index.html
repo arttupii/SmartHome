@@ -11,45 +11,91 @@
 </head>
 <body>
 <script>
-var ignoreUiUpdate = false;
-function fetchConfig(callBack) {
-  $.getJSON( "config", {
-    tags: "mount rainier",
-    tagmode: "any",
-    format: "json"
-  })
-    .done(callBack);	
+var webSocket = undefined;
+
+function createMsg(cmd, data) {
+	return JSON.stringify({
+		date: Date.now(),
+		cmd: cmd,
+		data: data
+	});
 }
+
+var config = {};
+
+function merge(target, source) {
+    for (var property in source) {      
+		var sourceProperty = source[ property ];
+		if ( typeof sourceProperty === 'object' ) {
+			target[ property ] = merge( target[ property ], sourceProperty );
+			continue;
+		}
+		target[ property ] = sourceProperty;
+    }
+    for (var a = 2, l = arguments.length; a < l; a++) {
+        merge(target, arguments[a]);
+    }
+    return target;
+}
+
+function openWebsocket() {
+	console.info("Open WebSocket...");
+	var currentLocation = window.location;
+	console.info(JSON.stringify(currentLocation))
+	webSocket = new WebSocket("ws://" + currentLocation.hostname + ":" + currentLocation.port,["protocolOne"]);
+	var open = false;
+	webSocket.onopen = function() {
+		console.info("WebSocket is open")
+		open = true;
+		
+		webSocket.onclose = function (event) {
+			console.log("WebSocket closed");
+			$(".devices").empty();
+			$(".devices").append(connectionLost());
+			setTimeout(openWebsocket, 2000);
+			webSocket = undefined;
+		}
+
+		webSocket.onmessage = function (event) {
+		  var msg = JSON.parse(event.data);
+		  if(msg.cmd==="all") {
+				config = msg.data;
+				$(".devices").empty();
+				$(".devices").attr('disabled', false);
+				_.values(config.devices).forEach(function(device){
+				$(".devices").append(addDevice(device));
+					createEventHandlers(device);
+				});
+
+				$(".devices").enhanceWithin();
+				refleshUI(config);
+			}
+			
+			if(msg.cmd==="update") {
+				console.info("update " + JSON.stringify(msg));
+				console.info("update   + " + JSON.stringify(merge(config, msg.data)) );
+				refleshUI(config);
+			}
+		}
+		
+		  // Send the msg object as a JSON-formatted string.
+		  webSocket.send(createMsg("get", ""));
+	}
+	setTimeout(function() {
+		if(open===false) {
+			openWebsocket();
+		}
+	}, 5000);
+}
+openWebsocket();
 
 function sendUpdateDevice(device) {
-  $.getJSON( "config", {
-    update: device,
-    format: "json"
-  })
-    .done(function(data){
-			
-	});	
+  if(webSocket) {
+	webSocket.send(createMsg("update", device));
+  }
 }
 
-(function() {
-  fetchConfig(function( data ) {
-      _.values(data.devices).forEach(function(device){
-		$(".devices").append(addDevice(device));
-		createEventHandlers(device);
-	  });
-	  
-	  $(".devices").enhanceWithin();
-	  refleshUI(data, "full");
-	  refreshUiAjax();
-    });
-})();
 
-function refreshUiAjax() {
-	fetchConfig(function(data){
-		refleshUI(data);	
-		setTimeout(refreshUiAjax,5000);
-	});
-} 
 
 function createEventHandlers(device) {
 	function eventChangeDay(day) {
@@ -58,7 +104,6 @@ function createEventHandlers(device) {
 		var update = {"devices":{"dummy":""}};
 		update.devices[device.id] = {"event":{"repeatingEvent":{}}};
 		update.devices[device.id].event.repeatingEvent[day] = $("#checkbox-" + device.id + "-" + day).is(":checked");
-		ignoreUiUpdate = true;
 		sendUpdateDevice(update);
 	}
 	
@@ -68,13 +113,11 @@ function createEventHandlers(device) {
 		update.devices[device.id] = { 
 			"powerOn": $("#flipswitch-checkbox-" + device.id + "-powerOn").is(":checked")
 		};
-		ignoreUiUpdate = true;
 		sendUpdateDevice(update);
 	}
 	
 	function eventTimeChange(timer) {
 		console.info("Change event");
-		ignoreUiUpdate = true;
 		var update = {"devices":{"dummy":""}};
 		update.devices[device.id] = { 
 			"event": {}
@@ -98,11 +141,8 @@ function createEventHandlers(device) {
 	$("#flipswitch-checkbox-" + device.id + "-powerOn").change(eventSwitchChange);
 }
 
-function refleshUI(config, coverage) {
-	if(ignoreUiUpdate) {
-		ignoreUiUpdate = false;
-		return;
-	}
+function refleshUI(config) {
+
 	_.values(config.devices).forEach(function(device){
 		console.info("Refresh");
 		$("#checkbox-" + device.id + "-ma").attr('checked', device.event.repeatingEvent.ma).checkboxradio('refresh');
@@ -113,15 +153,17 @@ function refleshUI(config, coverage) {
 		$("#checkbox-" + device.id + "-sa").attr('checked', device.event.repeatingEvent.sa).checkboxradio('refresh');
 		$("#checkbox-" + device.id + "-su").attr('checked', device.event.repeatingEvent.su).checkboxradio('refresh');
 
-		if(coverage==="full") {
-			$("#time-" + device.id + "-on").val(device.event.timeOn);
-			$("#time-" + device.id + "-off").val(device.event.timeOff);
-		}
-
+		$("#time-" + device.id + "-on").val(device.event.timeOn);
+		$("#time-" + device.id + "-off").val(device.event.timeOff);
 
 		$("#flipswitch-checkbox-" + device.id + "-powerOn").attr('checked', device.powerOn).flipswitch( "refresh" );	
 		$("#flipswitch-checkbox-" + device.id + "-powerOn").prop('checked', device.powerOn).flipswitch( "refresh" );
 	});
+}
+
+function connectionLost() {
+	var html = 'Connection lost...';
+	return html;
 }
 
 function addDevice(device) {

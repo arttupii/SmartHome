@@ -1,5 +1,8 @@
 var _ = require('underscore');
 var express = require('express');
+var app = express();
+var expressWs = require('express-ws')(app);
+
 var fs = require('fs');
 var config = JSON.parse(fs.readFileSync("./config.json"));
 var Promise = require('bluebird');
@@ -15,7 +18,7 @@ nexa.nexaInit(6);
 
 var controller_id = 4982814;
 
-var port = 8080;
+//var port = 8085;
 require('rconsole')
 console.set({
   facility: 'local0'      // default: user 
@@ -31,49 +34,64 @@ console.set({
   , showTags: true        // default: true 
 })
 
-server.listen(port, function() {
+/*server.listen(port, function() {
     console.log('server listening on port ' + port);
-});
+});*/
 
 var powerOffChangeDetected=false;
 
-function valueFix(value){
-	switch(value) {
-		case "true": return true;
-		case "false": return false;
-		case "": return "";
-		default: return isNaN(value)?value:parseFloat(value);
-	}
-}
+app.use(express.static('./public'));
 
-server.get('/config', function (req, res) {
-	function booleanConvert(str) {
-		if(str==="true") return true;
-		return false;
-	}
+app.ws('/', function(ws, req) {
+	ws.on('message', function(msg) {
+		console.log("Message " + msg);
+		msg = JSON.parse(msg);
 		
-    if(!_.isEmpty(req.query)) {
-		//console.info(JSON.stringify(req.query));
-
-        if(req.query.update!==undefined) {
-			var dotNotations = toDot(req.query.update);
+		if(msg.cmd==='get') {
+			console.log("Asked all  " + msg);
+			ws.send(createMsg("all",config));
+		}
+		
+		if(msg.cmd==='update') {
+			var dotNotations = toDot(msg.data);
 			_.keys(dotNotations).forEach(function(dot){
 				if(dot.indexOf("dummy")===-1) {
-					var value = valueFix(dotNotations[dot]);
-					//console.info(dot + " " + value);
+					var value = dotNotations[dot];
+					var ob = {};
 					ns(config).set(dot, value);
+					ns(ob).set(dot, value, true);
 					if(dot.indexOf("powerOn")!==-1) {
 						console.info("Power state is updated by user. %s=%s", dot, value);
 						powerOffChangeDetected = true;
 					}
-
+					sendChangeForClients(createMsg("update", ob));
 				}
 			});
 			fs.writeFileSync("./config.json", JSON.stringify(config,0,4));
-		}
-    }
-    res.send(config);
+		}	
+	});
 });
+
+
+var aWss = expressWs.getWss('/');
+
+function sendChangeForClients(change) {
+	console.info("Send change for all clients..." + JSON.stringify(change));
+	aWss.clients.forEach(function (client) {
+		client.send(change);
+	});
+
+}
+
+function createMsg(cmd, data) {
+	return JSON.stringify({
+		date: Date.now(),
+		cmd: cmd,
+		data: data
+	});
+}
+
+app.listen(8080);
 			
 function sendPortStatesToTarget() {
 	return Promise.each(_.values(config.devices), function (device){
@@ -94,6 +112,7 @@ function sendPortStatesToTarget() {
 		//console.info("KAKKA")
 		console.error(err);
 	});
+	return Promise.resolve();
 }
 
 function checkTimers() {
@@ -110,6 +129,15 @@ function checkTimers() {
 			console.info("Update power state to %s (timer), device=%d", state, device.id);
 			device.powerOn = state; 
 			powerOffChangeDetected=true;
+			
+			var ob = {
+				"devices": {
+				}
+			};
+			ob.devices[device.id.toString()] = {};
+			ob.devices[device.id.toString()].powerOn = state;
+			sendChangeForClients(createMsg("update", ob));
+			
 			fs.writeFileSync("./config.json", JSON.stringify(config,0,4));
 		}
 		

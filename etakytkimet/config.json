@@ -7,11 +7,11 @@
             "dim": 0,
             "event": {
                 "repeatingEvent": {
-                    "ma": true,
-                    "tu": true,
-                    "we": true,
-                    "th": true,
-                    "fr": true,
+                    "ma": false,
+                    "tu": false,
+                    "we": false,
+                    "th": false,
+                    "fr": false,
                     "sa": false,
                     "su": false
                 },
