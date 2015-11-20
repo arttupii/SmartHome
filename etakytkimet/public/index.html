@@ -42,7 +42,7 @@ function openWebsocket() {
 	console.info("Open WebSocket...");
 	var currentLocation = window.location;
 	console.info(JSON.stringify(currentLocation))
-	webSocket = new WebSocket("ws://" + currentLocation.hostname + ":" + currentLocation.port,["protocolOne"]);
+	webSocket = new WebSocket((currentLocation.protocol==="http:"?"ws://":"wss://") + currentLocation.hostname + ":" + currentLocation.port,["protocolOne"]);
 	var open = false;
 	webSocket.onopen = function() {
 		console.info("WebSocket is open")

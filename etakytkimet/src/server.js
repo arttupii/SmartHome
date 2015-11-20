@@ -2,9 +2,10 @@ var _ = require('underscore');
 var express = require('express');
 var app = express();
 var expressWs = require('express-ws')(app);
-
+var basicAuth = require('basic-auth');
 var fs = require('fs');
 var config = JSON.parse(fs.readFileSync("./config.json"));
+var setup = JSON.parse(fs.readFileSync("./setupfile.json"));
 var Promise = require('bluebird');
 var nexa = require('nexa');
 var ns = require('nested-structure');
@@ -14,7 +15,7 @@ var server = express();
 server.use(express.static('./public'));
 
 //Tansmitter is connected to GPIO6
-nexa.nexaInit(6);
+nexa.nexaInit(setup.gpioPort);
 
 var controller_id = 4982814;
 
@@ -39,6 +40,29 @@ console.set({
 });*/
 
 var powerOffChangeDetected=false;
+
+// Authenticator
+app.use(function(req, res, next) {
+    var auth;
+
+    // check whether an autorization header was send    
+    if (req.headers.authorization) {
+      auth = new Buffer(req.headers.authorization.substring(6), 'base64').toString().split(':');
+    }
+
+    if (!auth || auth[0] !== setup.user || auth[1] !== setup.password) {
+        // any of the tests failed
+        // send an Basic Auth request (HTTP Code: 401 Unauthorized)
+        res.statusCode = 401;
+        // MyRealmName can be changed to anything, will be prompted to the user
+        res.setHeader('WWW-Authenticate', 'Basic realm="MyRealmName"');
+        // this will displayed in the browser when authorization is cancelled
+        res.end('Unauthorized');
+    } else {
+        // continue with processing, user was authenticated
+        next();
+    }
+});
 
 app.use(express.static('./public'));
 
@@ -91,7 +115,7 @@ function createMsg(cmd, data) {
 	});
 }
 
-app.listen(8080);
+app.listen(setup.listenPort);
 			
 function sendPortStatesToTarget() {
 	return Promise.each(_.values(config.devices), function (device){

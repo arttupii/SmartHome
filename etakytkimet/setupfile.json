@@ -1,0 +1,6 @@
+{
+	"gpioPort": 6,
+	"listenPort": 8080,
+	"user": "user",
+	"password": "password"
+}

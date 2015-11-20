@@ -8,8 +8,8 @@
             "event": {
                 "repeatingEvent": {
                     "ma": false,
-                    "tu": false,
-                    "we": false,
+                    "tu": true,
+                    "we": true,
                     "th": false,
                     "fr": false,
                     "sa": false,

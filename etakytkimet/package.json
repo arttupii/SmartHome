@@ -11,5 +11,5 @@
 	"node-syslog": "1.2.0"
 	"to-dot": "0.0.4",
 	"express-ws": "0.2.6"
-  }
+	}
 }
