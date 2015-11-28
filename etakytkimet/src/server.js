@@ -120,26 +120,29 @@ app.listen(setup.listenPort);
 			
 function sendPortStatesToTarget() {
 	return Promise.each(_.values(config.devices), function (device){
-		//console.info(JSON.stringify(device))
-		return new Promise(function (resolve, reject)  {
-			for(var i=0;i<3;i++) {
-				if(device.powerOn) {
-					if(device.dim>0) {
-						nexa.nexaDim(controller_id, device.id,device.dim, function() {
-							resolve();
-						});
+		function setNexaState(){
+			return new Promise(function (resolve, reject)  {
+					if(device.powerOn) {
+						if(device.dim>0) {
+							nexa.nexaDim(controller_id, device.id,device.dim, function() {
+								resolve();
+							});
+						} else {
+							nexa.nexaOn(controller_id, device.id, function() {
+								resolve();
+							});
+						}
 					} else {
-						nexa.nexaOn(controller_id, device.id, function() {
+						nexa.nexaOff(controller_id, device.id, function() {
 							resolve();
 						});
 					}
-				} else {
-					nexa.nexaOff(controller_id, device.id, function() {
-						resolve();
-					});
-				}
-			}
-		});
+			});
+		}
+		//Try tree times
+		return setNexaState()
+			.then(setNexaState())
+			.then(setNexaState());
 	}).catch(function (err){
 		//console.info("KAKKA")
 		console.error(err);
