@@ -6,7 +6,7 @@
     "underscore": "1.8.3",
 	"express": "4.13.3",
 	"bluebird": "2.10.2",
-	"nexa": "~0.2.0",
+	"nexa": "~0.2.2",
 	"nested-structure": "1.0.4",
 	"to-dot": "0.0.4",
 	"express-ws": "0.2.6"

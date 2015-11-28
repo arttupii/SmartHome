@@ -17,7 +17,7 @@ server.use(express.static('./public'));
 //Tansmitter is connected to GPIO6
 nexa.nexaInit(setup.gpioPort);
 
-var controller_id = 4982814;
+var controller_id = setup.controller_id;
 /*
 //var port = 8085;
 require('rconsole')

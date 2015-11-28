@@ -23,10 +23,10 @@ process.on('message', function(m) {
 	  addon.nexaOff(m.controller_id,m.device,m.dim);
   } 
   if(m.cmd=='nexaPairing') {
-	  addon.nexaOff(m.controller_id,m.device);
+	  addon.nexaPairing(m.controller_id,m.device);
   }
   if(m.cmd=='nexaUnpairing') {
-	  addon.nexaOff(m.controller_id,m.device);
+	  addon.nexaUnpairing(m.controller_id,m.device);
   }
   process.send(m);
 });
