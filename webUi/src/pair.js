@@ -10,12 +10,28 @@ var controller_id = setup.controller_id;
 //Tansmitter is connected to GPIO6
 nexa.nexaInit(setup.gpioPort);
 
-Promise.each(_.values(config.devices), function (device){
-	return new Promise(function (resolve, reject)  {
-		nexa.nexaPairing(controller_id, device.id, function() {
-			resolve();
+
+var deviceId = parseInt(process.argv[3]);
+var pair = process.argv[2];
+
+console.info("Pair, deviceId: " + deviceId, " controller_id: " + controller_id);
+
+if(config.devices[deviceId]!==undefined) {
+	if(pair==="pair") {
+		nexa.nexaPairing(controller_id, deviceId, function() {
+			console.info("Done...");
+			process.exit(0);
 		});
-	});
-}).then(function() {
-	console.info("Done");
-});
+	} else if(pair==="unpair") {
+		nexa.nexaUnpairing(controller_id, deviceId, function() {
+			console.info("Done...");
+			process.exit(0);
+		});
+	} else {
+		console.info("Error.. Invalid arguments");
+		process.exit(1);
+	}
+} else {
+	console.info("Error: DeviceId is not existing in config.json");
+	process.exit(1);
+}
