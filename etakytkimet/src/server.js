@@ -18,7 +18,7 @@ server.use(express.static('./public'));
 nexa.nexaInit(setup.gpioPort);
 
 var controller_id = 4982814;
-
+/*
 //var port = 8085;
 require('rconsole')
 console.set({
@@ -34,6 +34,7 @@ console.set({
   , showFile: true        // default: true 
   , showTags: true        // default: true 
 })
+*/
 
 /*server.listen(port, function() {
     console.log('server listening on port ' + port);
@@ -120,18 +121,25 @@ app.listen(setup.listenPort);
 function sendPortStatesToTarget() {
 	return Promise.each(_.values(config.devices), function (device){
 		//console.info(JSON.stringify(device))
-		for(var i=0;i<3;i++) {
-			if(device.powerOn) {
-				if(device.dim>0) {
-					  nexa.nexaDim(controller_id, device.id,device.dim);
-					return serialPortCmd("dim " + device.id + " " + device.dim + "\n");
+		return new Promise(function (resolve, reject)  {
+			for(var i=0;i<3;i++) {
+				if(device.powerOn) {
+					if(device.dim>0) {
+						nexa.nexaDim(controller_id, device.id,device.dim, function() {
+							resolve();
+						});
+					} else {
+						nexa.nexaOn(controller_id, device.id, function() {
+							resolve();
+						});
+					}
 				} else {
-					nexa.nexaOn(controller_id, device.id);
+					nexa.nexaOff(controller_id, device.id, function() {
+						resolve();
+					});
 				}
-			} else {
-				nexa.nexaOff(controller_id, device.id);;
 			}
-		}
+		});
 	}).catch(function (err){
 		//console.info("KAKKA")
 		console.error(err);

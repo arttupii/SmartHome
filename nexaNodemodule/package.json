@@ -1,8 +1,8 @@
 {
   "name": "nexa",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "NodeJs nexaCtrl node module",
-  "main": "nexa.js",
+  "main": "main.js",
   "private": false,
   "scripts": {
     "test": "node hello.js"
