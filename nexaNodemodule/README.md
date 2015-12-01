@@ -1,7 +1,6 @@
-# Nexa
+# Nexa Remote Switches control library for Raspberry pi
 ```
-
-Nexa control library for raspberry.   
+  
 This library is based on https://github.com/calle-gunnarsson/NexaCtrl   
 Example project that uses nexa library: https://github.com/arttupii/SmartHome/tree/master/  
 
