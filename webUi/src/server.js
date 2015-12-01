@@ -118,9 +118,9 @@ function createMsg(cmd, data) {
 
 app.listen(setup.listenPort);
 			
-function sendPortStatesToTarget() {
-	return Promise.each(_.values(config.devices), function (device){
-		function setNexaState(){
+function sendPortStatesToTarget(tryToSendCnt) {
+	return Promise.each(_.range(0,tryToSendCnt), function (){
+		return Promise.each(_.values(config.devices), function (device){
 			return new Promise(function (resolve, reject)  {
 					if(device.powerOn) {
 						if(device.dim>0) {
@@ -138,16 +138,10 @@ function sendPortStatesToTarget() {
 						});
 					}
 			});
-		}
-		//Try tree times
-		return setNexaState()
-			.then(setNexaState())
-			.then(setNexaState());
-	}).catch(function (err){
-		//console.info("KAKKA")
-		console.error(err);
+		}).catch(function (err){
+			console.error(err);
+		});
 	});
-	return Promise.resolve();
 }
 
 function checkTimers() {
@@ -216,10 +210,11 @@ function updateLoop() {
 		.then(checkTimers())
 		.then(function(){
 			updaloopCnt++;
-			if(updaloopCnt>=60 || powerOffChangeDetected) {
+			if(updaloopCnt>=45 || powerOffChangeDetected) {
+				var tryToSendCnt = powerOffChangeDetected?3:1;
 				powerOffChangeDetected = false;
 				updaloopCnt = 0;
-				return sendPortStatesToTarget();
+				return sendPortStatesToTarget(tryToSendCnt);
 			}
 			return Promise.resolve();
 		})
