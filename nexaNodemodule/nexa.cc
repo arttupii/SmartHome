@@ -6,12 +6,6 @@ using namespace v8;
 
 NexaCtrl *nexaCtrl=NULL;
  
-void Method(const v8::FunctionCallbackInfo<Value>& args) {
-	Isolate* isolate = Isolate::GetCurrent();
-	HandleScope scope(isolate);
-	args.GetReturnValue().Set(String::NewFromUtf8(isolate, "worlde"));
-}
-
 void NexaOn(const FunctionCallbackInfo<Value>& args) {
 	Isolate* isolate = Isolate::GetCurrent();
 	HandleScope scope(isolate);
@@ -37,7 +31,7 @@ void NexaOn(const FunctionCallbackInfo<Value>& args) {
 		return;
 	}
 	
-	printf("NexaOn: controller_id=%d, device_id=%d\n", controller_id, device_id);
+	//printf("NexaOn: controller_id=%d, device_id=%d\n", controller_id, device_id);
 	nexaCtrl->DeviceOn(controller_id, device_id);
 	args.GetReturnValue().Set(0);
 }
@@ -67,7 +61,7 @@ void NexaOff(const FunctionCallbackInfo<Value>& args) {
 	unsigned int controller_id = (int)args[0]->NumberValue();
 	unsigned int device_id = (int)args[1]->NumberValue();
 	
-	printf("NexaOff: controller_id=%d, device_id=%d\n", controller_id, device_id);
+	//printf("NexaOff: controller_id=%d, device_id=%d\n", controller_id, device_id);
 	nexaCtrl->DeviceOff(controller_id, device_id);
 	args.GetReturnValue().Set(0);
 }
@@ -97,7 +91,7 @@ void NexaPairing(const FunctionCallbackInfo<Value>& args) {
 	unsigned int controller_id = (int)args[0]->NumberValue();
 	unsigned int device_id = (int)args[1]->NumberValue();
 	
-	printf("NexaPairing: controller_id=%d, device_id=%d\n", controller_id, device_id);
+	//printf("NexaPairing: controller_id=%d, device_id=%d\n", controller_id, device_id);
 	
 	for(int i=0;i<10;i++) {
 	  nexaCtrl->DeviceOn(controller_id, device_id);
@@ -131,7 +125,7 @@ void NexaUnpairing(const FunctionCallbackInfo<Value>& args) {
 	unsigned int controller_id = (int)args[0]->NumberValue();
 	unsigned int device_id = (int)args[1]->NumberValue();
 	
-	printf("NexaUnpairing: controller_id=%d, device_id=%d\n", controller_id, device_id);
+	//printf("NexaUnpairing: controller_id=%d, device_id=%d\n", controller_id, device_id);
 	
 	for(int i=0;i<10;i++) {
 	  nexaCtrl->DeviceOff(controller_id, device_id);
@@ -166,7 +160,7 @@ void NexaDim(const FunctionCallbackInfo<Value>& args) {
 	unsigned int device_id = (int)args[1]->NumberValue();
 	unsigned int dim = (int)args[2]->NumberValue();
 	
-	printf("NexaDim: controller_id=%d, device_id=%d, dim=%d\n", controller_id, device_id, dim);
+	//printf("NexaDim: controller_id=%d, device_id=%d, dim=%d\n", controller_id, device_id, dim);
 	nexaCtrl->DeviceDim(controller_id, device_id, dim);
 	args.GetReturnValue().Set(0);
 }
@@ -194,7 +188,7 @@ void NexaInit(const FunctionCallbackInfo<Value>& args) {
 				String::NewFromUtf8(isolate, "Nexa is already initialized")));
 		return;
 	}
-	printf("NexaInit: raspberryIoPin=%d\n", raspberryIoPin);
+	//printf("NexaInit: raspberryIoPin=%d\n", raspberryIoPin);
 	nexaCtrl = new NexaCtrl(raspberryIoPin);	
 	
 	args.GetReturnValue().Set(0);
@@ -207,7 +201,7 @@ void Init(Handle<Object> exports) {
 	exports->Set(String::NewFromUtf8(isolate, "nexaOff"),
 			FunctionTemplate::New(isolate, NexaOff)->GetFunction());
 	exports->Set(String::NewFromUtf8(isolate, "nexaDim"),
-			FunctionTemplate::New(isolate, Method)->GetFunction());
+			FunctionTemplate::New(isolate, NexaDim)->GetFunction());
 	exports->Set(String::NewFromUtf8(isolate, "nexaInit"),
 			FunctionTemplate::New(isolate, NexaInit)->GetFunction());
 	exports->Set(String::NewFromUtf8(isolate, "nexaPairing"),

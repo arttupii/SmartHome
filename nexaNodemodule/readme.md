@@ -1,9 +1,11 @@
 # Nexa Remote Switches control library for Raspberry pi
+
+![](https://raw.githubusercontent.com/arttupii/SmartHome/master/pictures/schematic.png)
+
 ```
-  
 This library is based on https://github.com/calle-gunnarsson/NexaCtrl   
 Example project that uses nexa library: https://github.com/arttupii/SmartHome/tree/master/  
-
+Link to transmitter module: http://www.dx.com/p/433mhz-wireless-transmitter-module-superregeneration-for-arduino-green-149254
 
 var addon = require('nexa');   
 
