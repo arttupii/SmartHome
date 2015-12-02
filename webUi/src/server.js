@@ -11,6 +11,8 @@ var nexa = require('nexa');
 var ns = require('nested-structure');
 var toDot = require('to-dot');
 
+
+
 var server = express();
 server.use(express.static('./public'));
 
@@ -67,6 +69,7 @@ app.use(function(req, res, next) {
 
 app.use(express.static('./public'));
 
+
 app.ws('/', function(ws, req) {
 	ws.on('message', function(msg) {
 		console.log("Message " + msg);
@@ -74,7 +77,7 @@ app.ws('/', function(ws, req) {
 		
 		if(msg.cmd==='get') {
 			console.log("Asked all  " + msg);
-			ws.send(createMsg("all",config));
+			sendToClient(ws,createMsg("all",config));
 		}
 		
 		if(msg.cmd==='update') {
@@ -86,24 +89,51 @@ app.ws('/', function(ws, req) {
 					ns(config).set(dot, value);
 					ns(ob).set(dot, value, true);
 					if(dot.indexOf("powerOn")!==-1) {
-						console.info("Power state is updated by user. %s=%s", dot, value);
-						powerOffChangeDetected = true;
+						console.info("Power state is updated by user. %s=%s", dot, value, parseInt(dot));
+						powerOffChangeEvent(config.devices[parseInt(dot.split(".")[1])], ws, "user")
+					} else {
+						sendChangeForClients(createMsg("update", ob), ws);
 					}
-					sendChangeForClients(createMsg("update", ob));
 				}
 			});
 			fs.writeFileSync("./config.json", JSON.stringify(config,0,4));
-		}	
+		}
+		if(msg.cmd==='pair') {
+			var pair = msg.data.cmd;
+			var deviceID = msg.data.device;
+			if(pair==="pair") {
+				console.info("Pairing request: deviceId = " + deviceID);
+				nexa.nexaPairing(controller_id, deviceID, function(){
+					sendToClient(ws,createMsg("pair", "pair done"));
+				});
+			}
+			if(pair==="unpair") {
+				console.info("Unpairing request: deviceId = " + deviceID);
+				nexa.nexaUnpairing(controller_id, deviceID, function(){
+					sendToClient(ws,createMsg("pair", "unpair done"))
+				});
+			}
+		}
 	});
 });
 
 
 var aWss = expressWs.getWss('/');
 
-function sendChangeForClients(change) {
+function sendToClient(client, msg) {
+	try{
+		client.send(msg);
+	} catch(err) {
+		console.info(err);
+	}
+}
+
+function sendChangeForClients(change, ignoreClient) {
 	console.info("Send change for all clients..." + JSON.stringify(change));
 	aWss.clients.forEach(function (client) {
-		client.send(change);
+		if(ignoreClient===undefined || ignoreClient!==client) {
+			sendToClient(client,change);
+		}
 	});
 
 }
@@ -129,6 +159,7 @@ function sendPortStatesToTarget(tryToSendCnt) {
 							});
 						} else {
 							nexa.nexaOn(controller_id, device.id, function() {
+
 								resolve();
 							});
 						}
@@ -144,6 +175,30 @@ function sendPortStatesToTarget(tryToSendCnt) {
 	});
 }
 
+function powerOffChangeEvent(device, ignoreClient, eventReason) {
+	if(device.statusInfo===undefined) {
+		device.statusInfo = {}
+	}
+	var now = new Date();
+	if(device.powerOn){
+		device.statusInfo.onTime = now.toISOString();
+	}
+	else {
+		device.statusInfo.offTime = now.toISOString();
+	}
+	device.statusInfo.lastEventReason = eventReason;
+	powerOffChangeDetected=true;
+
+	var ob = {
+				"devices": {
+				}
+			};
+
+	ob.devices[device.id.toString()] = {};
+	ob.devices[device.id.toString()].powerOn = device.powerOn;
+	ob.devices[device.id.toString()].statusInfo = device.statusInfo;
+	sendChangeForClients(createMsg("update", ob), ignoreClient);
+}
 function checkTimers() {
 	return function() {
 		function isNow(timeStr) {
@@ -154,18 +209,10 @@ function checkTimers() {
 			return ret;
 		}
 		
-		function updatePowerOffState(device, state) {
-			console.info("Update power state to %s (timer), device=%d", state, device.id);
+		function updatePowerOffState(device, state, reason) {
+			console.info("!!!!!Update power state to %s (timer), device=%d", state, device.id);
 			device.powerOn = state; 
-			powerOffChangeDetected=true;
-			
-			var ob = {
-				"devices": {
-				}
-			};
-			ob.devices[device.id.toString()] = {};
-			ob.devices[device.id.toString()].powerOn = state;
-			sendChangeForClients(createMsg("update", ob));
+			powerOffChangeEvent(device, undefined, reason)
 			
 			fs.writeFileSync("./config.json", JSON.stringify(config,0,4));
 		}
@@ -173,6 +220,15 @@ function checkTimers() {
 		return Promise.each(_.values(config.devices), function (device){
 			var isTimeOn = isNow(device.event.timeOn);
 			var isTimeOff = isNow(device.event.timeOff);
+
+			if(device.powerOn===true && device.statusInfo!==undefined && device.statusInfo.onTime!==undefined && device.maxOnTime!==undefined && device.maxOnTime>0) {
+				var onTime = (new Date(device.statusInfo.onTime)).getTime()/(1000*60);
+				var now = (new Date()).getTime()/(1000*60);
+				if((now-onTime)>=device.maxOnTime) {
+					updatePowerOffState(device, false, "maxOnTimer");
+				}
+				//console.info("DEBUG %s-%s = %s    --> %s --> %s", now, onTime, (now-onTime), device.maxOnTime, (now-onTime)>=device.maxOnTime);
+			}
 			
 			if( isTimeOn && device.powerOn===false || isTimeOff && device.powerOn===true ) {
 				var setPowerOn = true;
@@ -184,18 +240,18 @@ function checkTimers() {
 				device.event.repeatingEvent.su ) {
 					var now = new Date();
 					switch(now.getDay()) {
-						case 0: if(device.event.repeatingEvent.su) {updatePowerOffState(device, setPowerOn);} break;
-						case 1: if(device.event.repeatingEvent.mo) {updatePowerOffState(device, setPowerOn);} break;
-						case 2: if(device.event.repeatingEvent.tu) {updatePowerOffState(device, setPowerOn);} break;
-						case 3: if(device.event.repeatingEvent.we) {updatePowerOffState(device, setPowerOn);} break;
-						case 4: if(device.event.repeatingEvent.th) {updatePowerOffState(device, setPowerOn);} break;
-						case 5: if(device.event.repeatingEvent.fr) {updatePowerOffState(device, setPowerOn);} break;
-						case 6: if(device.event.repeatingEvent.sa) {updatePowerOffState(device, setPowerOn);} break;
+						case 0: if(device.event.repeatingEvent.su) {updatePowerOffState(device, setPowerOn, "timer");} break;
+						case 1: if(device.event.repeatingEvent.mo) {updatePowerOffState(device, setPowerOn, "timer");} break;
+						case 2: if(device.event.repeatingEvent.tu) {updatePowerOffState(device, setPowerOn, "timer");} break;
+						case 3: if(device.event.repeatingEvent.we) {updatePowerOffState(device, setPowerOn, "timer");} break;
+						case 4: if(device.event.repeatingEvent.th) {updatePowerOffState(device, setPowerOn, "timer");} break;
+						case 5: if(device.event.repeatingEvent.fr) {updatePowerOffState(device, setPowerOn, "timer");} break;
+						case 6: if(device.event.repeatingEvent.sa) {updatePowerOffState(device, setPowerOn, "timer");} break;
 					}	
 				} else {
 					if(isTimeOn) device.event.timeOn = "";
 					if(isTimeOff) device.event.timeOff = "";
-					updatePowerOffState(device, setPowerOn);
+					updatePowerOffState(device, setPowerOn, "timer");
 				}
 			}
 		}).catch(function (err){

@@ -4,9 +4,10 @@
             "name": "Auton lämmitin",
             "powerOn": false,
             "dim": 0,
+            "maxOnTime": 180,
             "event": {
                 "repeatingEvent": {
-                    "ma": false,
+                    "mo": false,
                     "tu": false,
                     "we": false,
                     "th": false,
@@ -14,28 +15,38 @@
                     "sa": false,
                     "su": false
                 },
-                "timeOn": "07:30",
-                "timeOff": "08:30"
+                "timeOn": "06:00",
+                "timeOff": "09:00"
             },
-            "id": 0
+            "id": 0,
+            "statusInfo": {
+                "offTime": "2016-01-25T18:02:41.640Z",
+                "onTime": "2016-01-25T18:02:40.186Z"
+            }
         },
         "1": {
             "id": 1,
-            "name": "Kytkin1",
+            "name": "Ikkunavalot",
             "powerOn": false,
             "dim": 0,
+            "maxOnTime": 0,
             "event": {
                 "timeOn": "07:30",
                 "timeOff": "08:00",
                 "repeatingEvent": {
-                    "ma": true,
-                    "tu": true,
-                    "we": true,
-                    "th": true,
-                    "fr": true,
+                    "mo": false,
+                    "tu": false,
+                    "we": false,
+                    "th": false,
+                    "fr": false,
                     "sa": false,
                     "su": false
                 }
+            },
+            "statusInfo": {
+                "onTime": "2016-10-17T15:13:56.272Z",
+                "offTime": "2016-10-17T15:14:07.970Z",
+                "lastEventReason": "user"
             }
         },
         "2": {
@@ -43,11 +54,12 @@
             "name": "Kytkin2",
             "powerOn": false,
             "dim": 0,
+            "maxOnTime": 1,
             "event": {
                 "timeOn": "",
                 "timeOff": "",
                 "repeatingEvent": {
-                    "ma": false,
+                    "mo": false,
                     "tu": false,
                     "we": false,
                     "th": false,
@@ -55,25 +67,36 @@
                     "sa": false,
                     "su": false
                 }
+            },
+            "statusInfo": {
+                "onTime": "2016-01-25T18:20:10.748Z",
+                "offTime": "2016-01-25T18:21:11.074Z",
+                "lastEventReason": "user"
             }
         },
         "3": {
             "id": 3,
             "name": "Kytkin3",
-            "powerOn": false,
+            "powerOn": true,
             "dim": 0,
+            "maxOnTime": 0,
             "event": {
                 "timeOn": "",
                 "timeOff": "",
                 "repeatingEvent": {
-                    "ma": false,
-                    "tu": false,
-                    "we": false,
-                    "th": false,
-                    "fr": false,
-                    "sa": false,
+                    "mo": false,
+                    "tu": true,
+                    "we": true,
+                    "th": true,
+                    "fr": true,
+                    "sa": true,
                     "su": false
                 }
+            },
+            "statusInfo": {
+                "offTime": "2016-01-25T18:17:56.913Z",
+                "onTime": "2016-10-17T15:15:21.236Z",
+                "lastEventReason": "user"
             }
         }
     }

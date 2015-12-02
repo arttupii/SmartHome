@@ -48,14 +48,6 @@ function openWebsocket() {
 		console.info("WebSocket is open")
 		open = true;
 		
-		webSocket.onclose = function (event) {
-			console.log("WebSocket closed");
-			$(".devices").empty();
-			$(".devices").append(connectionLost());
-			setTimeout(openWebsocket, 2000);
-			webSocket = undefined;
-		}
-
 		webSocket.onmessage = function (event) {
 		  var msg = JSON.parse(event.data);
 		  if(msg.cmd==="all") {
@@ -70,7 +62,10 @@ function openWebsocket() {
 				$(".devices").enhanceWithin();
 				refleshUI(config);
 			}
-			
+			if(msg.cmd==="pair") {
+				console.info("pairreq done");
+				enableElements($(".devices"));
+			}
 			if(msg.cmd==="update") {
 				console.info("update " + JSON.stringify(msg));
 				console.info("update   + " + JSON.stringify(merge(config, msg.data)) );
@@ -79,23 +74,43 @@ function openWebsocket() {
 		}
 		
 		  // Send the msg object as a JSON-formatted string.
-		  webSocket.send(createMsg("get", ""));
+		webSocket.send(createMsg("get", ""));
 	}
-	setTimeout(function() {
-		if(open===false) {
-			openWebsocket();
-		}
-	}, 5000);
+	
+	webSocket.onclose = function (event) {
+		console.log("WebSocket closed");
+		$(".devices").empty();
+		$(".devices").append(connectionLost());
+		webSocket = undefined;
+	}
+	
+	webSocket.onerror = function (event) {
+		console.log("WebSocket onerror");
+		$(".devices").empty();
+		$(".devices").append(connectionLost());
+		webSocket = undefined;
+	}	
+	
+
 }
 openWebsocket();
-
+setInterval(function() {
+	if(webSocket==undefined) {
+		openWebsocket();
+	}
+}, 5000);
+	
 function sendUpdateDevice(device) {
   if(webSocket) {
 	webSocket.send(createMsg("update", device));
   }
 }
 
-
+function sendPairRequestToDevice(deviceId, cmd) {
+  if(webSocket) {
+	webSocket.send(createMsg("pair", {device: deviceId, cmd: cmd}));
+  }
+}
 
 function createEventHandlers(device) {
 	function eventChangeDay(day) {
@@ -127,7 +142,7 @@ function createEventHandlers(device) {
 		sendUpdateDevice(update);
 	}
 	
-	$( "#checkbox-" + device.id + "-ma" ).change(function() {eventChangeDay("ma");});
+	$( "#checkbox-" + device.id + "-mo" ).change(function() {eventChangeDay("mo");});
 	$( "#checkbox-" + device.id + "-tu" ).change(function() {eventChangeDay("tu");});
 	$( "#checkbox-" + device.id + "-we" ).change(function() {eventChangeDay("we");});
 	$( "#checkbox-" + device.id + "-th" ).change(function() {eventChangeDay("th");});
@@ -139,13 +154,38 @@ function createEventHandlers(device) {
 	$("#time-" + device.id + "-off").change(function() {eventTimeChange("off");});
 	
 	$("#flipswitch-checkbox-" + device.id + "-powerOn").change(eventSwitchChange);
+	
+	$(".button-" + device.id + "-unpair").click(function(){
+		disableElements($(".devices"));
+		sendPairRequestToDevice(device.id, "unpair");
+	});
+	$(".button-" + device.id + "-pair").click(function(){
+		disableElements($(".devices"));
+		sendPairRequestToDevice(device.id, "pair");
+	});
 }
 
+function disableElements(el) {
+	for (var i = 0; i < el.length; i++) {
+		el[i].disabled = true;
+
+		disableElements(el[i].children);
+	}
+}
+
+function enableElements(el) {
+	for (var i = 0; i < el.length; i++) {
+		el[i].disabled = false;
+
+		enableElements(el[i].children);
+	}
+}
+	
 function refleshUI(config) {
 
 	_.values(config.devices).forEach(function(device){
 		console.info("Refresh");
-		$("#checkbox-" + device.id + "-ma").attr('checked', device.event.repeatingEvent.ma).checkboxradio('refresh');
+		$("#checkbox-" + device.id + "-mo").attr('checked', device.event.repeatingEvent.mo).checkboxradio('refresh');
 		$("#checkbox-" + device.id + "-tu").attr('checked', device.event.repeatingEvent.tu).checkboxradio('refresh');
 		$("#checkbox-" + device.id + "-we").attr('checked', device.event.repeatingEvent.we).checkboxradio('refresh');
 		$("#checkbox-" + device.id + "-th").attr('checked', device.event.repeatingEvent.th).checkboxradio('refresh');
@@ -157,7 +197,7 @@ function refleshUI(config) {
 		$("#time-" + device.id + "-off").val(device.event.timeOff);
 
 		$("#flipswitch-checkbox-" + device.id + "-powerOn").attr('checked', device.powerOn).flipswitch( "refresh" );	
-		$("#flipswitch-checkbox-" + device.id + "-powerOn").prop('checked', device.powerOn).flipswitch( "refresh" );
+		$("#flipswitch-checkbox-" + device.id + "-powerOn").text(device.id);
 	});
 }
 
@@ -167,29 +207,32 @@ function connectionLost() {
 }
 
 function addDevice(device) {
-  var html = '<div data-role="collapsible" class="device-$ID" id="device-$ID" data-content-theme="a" >\
-	<h4>$DEVICE_NAME</h4>\
-	<form>\
-	    <label for="time-$ID-on">Päälle</label><input type="time" data-clear-btn="false" name="time-$ID-on" id="time-$ID-on" value="">\
-	    <label for="time-$ID-off">Pois päältä</label><input type="time" data-clear-btn="true" name="time-$ID-off" id="time-$ID-off" value="">\
-	</form>\
-	\
-	<form>\
-	    <fieldset data-role="controlgroup" data-type="horizontal" style="text-align: center">\
-	        <input type="checkbox" name="checkbox-$ID-ma" id="checkbox-$ID-ma"><label for="checkbox-$ID-ma">Ma</label>\
-	        <input type="checkbox" name="checkbox-$ID-tu" id="checkbox-$ID-tu"><label for="checkbox-$ID-tu">Ti</label>\
-	        <input type="checkbox" name="checkbox-$ID-we" id="checkbox-$ID-we"><label for="checkbox-$ID-we">Ke</label>\
-			<input type="checkbox" name="checkbox-$ID-th" id="checkbox-$ID-th"><label for="checkbox-$ID-th">To</label>\
-			<input type="checkbox" name="checkbox-$ID-fr" id="checkbox-$ID-fr"><label for="checkbox-$ID-fr">Pe</label>\
-			<input type="checkbox" name="checkbox-$ID-sa" id="checkbox-$ID-sa"><label for="checkbox-$ID-sa">La</label>\
-			<input type="checkbox" name="checkbox-$ID-su" id="checkbox-$ID-su"><label for="checkbox-$ID-su">Su</label>\
-	    </fieldset>\
-	</form>\
-	\
-	<form><div data-role="fieldcontain"> \
-	    <label for="flipswitch-checkbox-$ID-powerOn">Kytkimen tila:</label>\
-	    <input type="flipswitch-checkbox" data-role="flipswitch" name="flipswitch-checkbox-$ID-powerOn" id="flipswitch-checkbox-$ID-powerOn">\
-	<div data-role="fieldcontain"></form>\
+  var html = ' \
+	<div data-role="collapsible" class="device-$ID" id="device-$ID" data-content-theme="a" >\
+		<h4>$DEVICE_NAME</h4>\
+		<form>\
+		    <label for="time-$ID-on">Päälle</label><input type="time" data-clear-btn="false" name="time-$ID-on" id="time-$ID-on" value="">\
+		    <label for="time-$ID-off">Pois päältä</label><input type="time" data-clear-btn="true" name="time-$ID-off" id="time-$ID-off" value="">\
+		</form>\
+		\
+		<form>\
+		    <fieldset data-role="controlgroup" data-type="horizontal" style="text-align: center">\
+		        <input type="checkbox" name="checkbox-$ID-mo" id="checkbox-$ID-mo"><label for="checkbox-$ID-mo">Mo</label>\
+		        <input type="checkbox" name="checkbox-$ID-tu" id="checkbox-$ID-tu"><label for="checkbox-$ID-tu">Tu</label>\
+		        <input type="checkbox" name="checkbox-$ID-we" id="checkbox-$ID-we"><label for="checkbox-$ID-we">We</label>\
+				<input type="checkbox" name="checkbox-$ID-th" id="checkbox-$ID-th"><label for="checkbox-$ID-th">Th</label>\
+				<input type="checkbox" name="checkbox-$ID-fr" id="checkbox-$ID-fr"><label for="checkbox-$ID-fr">Fr</label>\
+				<input type="checkbox" name="checkbox-$ID-sa" id="checkbox-$ID-sa"><label for="checkbox-$ID-sa">Sa</label>\
+				<input type="checkbox" name="checkbox-$ID-su" id="checkbox-$ID-su"><label for="checkbox-$ID-su">Su</label>\
+		    </fieldset>\
+		</form>\
+		\
+		<form><div data-role="fieldcontain"> \
+		    <label for="flipswitch-checkbox-$ID-powerOn">Kytkimen tila:</label>\
+		    <input type="flipswitch-checkbox" data-role="flipswitch" name="flipswitch-checkbox-$ID-powerOn" id="flipswitch-checkbox-$ID-powerOn">\
+		</div></form> \
+			<button type="button" data-icon="plus"  data-inline="true" data-iconpos="notext" class="button-$ID-pair"></button> \
+			<button type="button" data-icon="delete"  data-inline="true" data-iconpos="notext" class="button-$ID-unpair"></button> \
 	</div>';
 
 	function replaceAll(find, replace) {
