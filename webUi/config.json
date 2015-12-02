@@ -1,5 +1,4 @@
 {
-    "controller_id": 4982814,
     "devices": {
         "0": {
             "name": "Auton lämmitin",
@@ -8,8 +7,8 @@
             "event": {
                 "repeatingEvent": {
                     "ma": false,
-                    "tu": true,
-                    "we": true,
+                    "tu": false,
+                    "we": false,
                     "th": false,
                     "fr": false,
                     "sa": false,
@@ -26,14 +25,14 @@
             "powerOn": false,
             "dim": 0,
             "event": {
-                "timeOn": "",
-                "timeOff": "",
+                "timeOn": "07:30",
+                "timeOff": "08:00",
                 "repeatingEvent": {
-                    "ma": false,
-                    "tu": false,
-                    "we": false,
-                    "th": false,
-                    "fr": false,
+                    "ma": true,
+                    "tu": true,
+                    "we": true,
+                    "th": true,
+                    "fr": true,
                     "sa": false,
                     "su": false
                 }

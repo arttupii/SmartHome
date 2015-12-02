@@ -1,6 +1,7 @@
 {
+	"controller_id": 4982814,
 	"gpioPort": 6,
 	"listenPort": 8080,
 	"user": "user",
-	"password": "password"
+	"password": "admin"
 }
