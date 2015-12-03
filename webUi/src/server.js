@@ -93,7 +93,23 @@ app.ws('/', function(ws, req) {
 				}
 			});
 			fs.writeFileSync("./config.json", JSON.stringify(config,0,4));
-		}	
+		}
+		if(msg.cmd==='pair') {
+			var pair = msg.data.cmd;
+			var deviceID = msg.data.device;
+			if(pair==="pair") {
+				console.info("Pairing request: deviceId = " + deviceID);
+				nexa.nexaPairing(controller_id, deviceID, function(){
+					ws.send(createMsg("pair", "pair done"));
+				});
+			}
+			if(pair==="unpair") {
+				console.info("Unpairing request: deviceId = " + deviceID);
+				nexa.nexaUnpairing(controller_id, deviceID, function(){
+					ws.send(createMsg("pair", "unpair done"))
+				});
+			}
+		}
 	});
 });
 
