@@ -74,7 +74,7 @@ app.ws('/', function(ws, req) {
 		
 		if(msg.cmd==='get') {
 			console.log("Asked all  " + msg);
-			ws.send(createMsg("all",config));
+			sendToClient(ws,createMsg("all",config));
 		}
 		
 		if(msg.cmd==='update') {
@@ -100,13 +100,13 @@ app.ws('/', function(ws, req) {
 			if(pair==="pair") {
 				console.info("Pairing request: deviceId = " + deviceID);
 				nexa.nexaPairing(controller_id, deviceID, function(){
-					ws.send(createMsg("pair", "pair done"));
+					sendToClient(ws,createMsg("pair", "pair done"));
 				});
 			}
 			if(pair==="unpair") {
 				console.info("Unpairing request: deviceId = " + deviceID);
 				nexa.nexaUnpairing(controller_id, deviceID, function(){
-					ws.send(createMsg("pair", "unpair done"))
+					sendToClient(ws,createMsg("pair", "unpair done"))
 				});
 			}
 		}
@@ -116,10 +116,18 @@ app.ws('/', function(ws, req) {
 
 var aWss = expressWs.getWss('/');
 
+function sendToClient(client, msg) {
+	try{
+		client.send(msg);
+	} catch(err) {
+		console.info(err);
+	}
+}
+
 function sendChangeForClients(change) {
 	console.info("Send change for all clients..." + JSON.stringify(change));
 	aWss.clients.forEach(function (client) {
-		client.send(change);
+		sendToClient(client,change);
 	});
 
 }
