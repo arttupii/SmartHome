@@ -1,4 +1,4 @@
-# Nexa Remote Switches control library for Raspberry pi
+# Nexa Remote Switch control library for Raspberry pi
 
 ![](https://raw.githubusercontent.com/arttupii/SmartHome/master/pictures/schematic.png)
 

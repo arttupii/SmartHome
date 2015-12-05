@@ -1,7 +1,7 @@
 {
   "name": "nexa",
-  "version": "0.2.10",
-  "description": "Nexa Remote Switches control library for Raspberry pi",
+  "version": "0.2.11",
+  "description": "Nexa Remote Switch control library for Raspberry pi",
   "main": "main.js",
   "private": false,
   "scripts": {
