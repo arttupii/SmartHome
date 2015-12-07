@@ -89,7 +89,7 @@ app.ws('/', function(ws, req) {
 						console.info("Power state is updated by user. %s=%s", dot, value);
 						powerOffChangeDetected = true;
 					}
-					sendChangeForClients(createMsg("update", ob));
+					sendChangeForClients(createMsg("update", ob), ws);
 				}
 			});
 			fs.writeFileSync("./config.json", JSON.stringify(config,0,4));
@@ -124,10 +124,12 @@ function sendToClient(client, msg) {
 	}
 }
 
-function sendChangeForClients(change) {
+function sendChangeForClients(change, ignoreClient) {
 	console.info("Send change for all clients..." + JSON.stringify(change));
 	aWss.clients.forEach(function (client) {
-		sendToClient(client,change);
+		if(ignoreClient===undefined || ignoreClient!==client) {
+			sendToClient(client,change);
+		}
 	});
 
 }

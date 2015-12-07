@@ -48,14 +48,6 @@ function openWebsocket() {
 		console.info("WebSocket is open")
 		open = true;
 		
-		webSocket.onclose = function (event) {
-			console.log("WebSocket closed");
-			$(".devices").empty();
-			$(".devices").append(connectionLost());
-			setTimeout(openWebsocket, 2000);
-			webSocket = undefined;
-		}
-
 		webSocket.onmessage = function (event) {
 		  var msg = JSON.parse(event.data);
 		  if(msg.cmd==="all") {
@@ -82,8 +74,25 @@ function openWebsocket() {
 		}
 		
 		  // Send the msg object as a JSON-formatted string.
-		  webSocket.send(createMsg("get", ""));
+		webSocket.send(createMsg("get", ""));
 	}
+	
+	webSocket.onclose = function (event) {
+		console.log("WebSocket closed");
+		$(".devices").empty();
+		$(".devices").append(connectionLost());
+		setTimeout(openWebsocket, 2000);
+		webSocket = undefined;
+	}
+	
+	webSocket.onerror = function (event) {
+		console.log("WebSocket onerror");
+		$(".devices").empty();
+		$(".devices").append(connectionLost());
+		setTimeout(openWebsocket, 2000);
+		webSocket = undefined;
+	}	
+	
 	setTimeout(function() {
 		if(open===false) {
 			openWebsocket();
@@ -223,7 +232,6 @@ function addDevice(device) {
 		    <label for="flipswitch-checkbox-$ID-powerOn">Kytkimen tila:</label>\
 		    <input type="flipswitch-checkbox" data-role="flipswitch" name="flipswitch-checkbox-$ID-powerOn" id="flipswitch-checkbox-$ID-powerOn">\
 		</div></form> \
-		Pairing:\
 			<button type="button" data-icon="plus"  data-inline="true" data-iconpos="notext" class="button-$ID-pair"></button> \
 			<button type="button" data-icon="delete"  data-inline="true" data-iconpos="notext" class="button-$ID-unpair"></button> \
 	</div>';
