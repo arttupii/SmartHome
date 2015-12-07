@@ -81,7 +81,6 @@ function openWebsocket() {
 		console.log("WebSocket closed");
 		$(".devices").empty();
 		$(".devices").append(connectionLost());
-		setTimeout(openWebsocket, 2000);
 		webSocket = undefined;
 	}
 	
@@ -89,18 +88,18 @@ function openWebsocket() {
 		console.log("WebSocket onerror");
 		$(".devices").empty();
 		$(".devices").append(connectionLost());
-		setTimeout(openWebsocket, 2000);
 		webSocket = undefined;
 	}	
 	
-	setTimeout(function() {
-		if(open===false) {
-			openWebsocket();
-		}
-	}, 5000);
+
 }
 openWebsocket();
-
+setInterval(function() {
+	if(webSocket==undefined) {
+		openWebsocket();
+	}
+}, 5000);
+	
 function sendUpdateDevice(device) {
   if(webSocket) {
 	webSocket.send(createMsg("update", device));
