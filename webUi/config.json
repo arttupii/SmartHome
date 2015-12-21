@@ -6,15 +6,15 @@
             "dim": 0,
             "event": {
                 "repeatingEvent": {
-                    "ma": false,
-                    "tu": false,
-                    "we": false,
-                    "th": false,
-                    "fr": false,
+                    "mo": true,
+                    "tu": true,
+                    "we": true,
+                    "th": true,
+                    "fr": true,
                     "sa": false,
                     "su": false
                 },
-                "timeOn": "07:30",
+                "timeOn": "07:15",
                 "timeOff": "08:30"
             },
             "id": 0
@@ -28,7 +28,7 @@
                 "timeOn": "07:30",
                 "timeOff": "08:00",
                 "repeatingEvent": {
-                    "ma": true,
+                    "mo": true,
                     "tu": true,
                     "we": true,
                     "th": true,
@@ -47,7 +47,7 @@
                 "timeOn": "",
                 "timeOff": "",
                 "repeatingEvent": {
-                    "ma": false,
+                    "mo": false,
                     "tu": false,
                     "we": false,
                     "th": false,
@@ -66,7 +66,7 @@
                 "timeOn": "",
                 "timeOff": "",
                 "repeatingEvent": {
-                    "ma": false,
+                    "mo": false,
                     "tu": false,
                     "we": false,
                     "th": false,

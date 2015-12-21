@@ -142,7 +142,7 @@ function createEventHandlers(device) {
 		sendUpdateDevice(update);
 	}
 	
-	$( "#checkbox-" + device.id + "-ma" ).change(function() {eventChangeDay("ma");});
+	$( "#checkbox-" + device.id + "-mo" ).change(function() {eventChangeDay("mo");});
 	$( "#checkbox-" + device.id + "-tu" ).change(function() {eventChangeDay("tu");});
 	$( "#checkbox-" + device.id + "-we" ).change(function() {eventChangeDay("we");});
 	$( "#checkbox-" + device.id + "-th" ).change(function() {eventChangeDay("th");});
@@ -185,7 +185,7 @@ function refleshUI(config) {
 
 	_.values(config.devices).forEach(function(device){
 		console.info("Refresh");
-		$("#checkbox-" + device.id + "-ma").attr('checked', device.event.repeatingEvent.ma).checkboxradio('refresh');
+		$("#checkbox-" + device.id + "-mo").attr('checked', device.event.repeatingEvent.mo).checkboxradio('refresh');
 		$("#checkbox-" + device.id + "-tu").attr('checked', device.event.repeatingEvent.tu).checkboxradio('refresh');
 		$("#checkbox-" + device.id + "-we").attr('checked', device.event.repeatingEvent.we).checkboxradio('refresh');
 		$("#checkbox-" + device.id + "-th").attr('checked', device.event.repeatingEvent.th).checkboxradio('refresh');
@@ -217,7 +217,7 @@ function addDevice(device) {
 		\
 		<form>\
 		    <fieldset data-role="controlgroup" data-type="horizontal" style="text-align: center">\
-		        <input type="checkbox" name="checkbox-$ID-ma" id="checkbox-$ID-ma"><label for="checkbox-$ID-ma">Ma</label>\
+		        <input type="checkbox" name="checkbox-$ID-mo" id="checkbox-$ID-mo"><label for="checkbox-$ID-mo">Mo</label>\
 		        <input type="checkbox" name="checkbox-$ID-tu" id="checkbox-$ID-tu"><label for="checkbox-$ID-tu">Tu</label>\
 		        <input type="checkbox" name="checkbox-$ID-we" id="checkbox-$ID-we"><label for="checkbox-$ID-we">We</label>\
 				<input type="checkbox" name="checkbox-$ID-th" id="checkbox-$ID-th"><label for="checkbox-$ID-th">Th</label>\
