@@ -87,9 +87,10 @@ app.ws('/', function(ws, req) {
 					ns(ob).set(dot, value, true);
 					if(dot.indexOf("powerOn")!==-1) {
 						console.info("Power state is updated by user. %s=%s", dot, value, parseInt(dot));
-						powerOffChangeEvent(config.devices[parseInt(dot.split(".")[1])], ws)
+						powerOffChangeEvent(config.devices[parseInt(dot.split(".")[1])], ws, "user")
+					} else {
+						sendChangeForClients(createMsg("update", ob), ws);
 					}
-					sendChangeForClients(createMsg("update", ob), ws);
 				}
 			});
 			fs.writeFileSync("./config.json", JSON.stringify(config,0,4));
@@ -171,7 +172,7 @@ function sendPortStatesToTarget(tryToSendCnt) {
 	});
 }
 
-function powerOffChangeEvent(device, ignoreClient) {
+function powerOffChangeEvent(device, ignoreClient, eventReason) {
 	if(device.statusInfo===undefined) {
 		device.statusInfo = {}
 	}
@@ -182,6 +183,7 @@ function powerOffChangeEvent(device, ignoreClient) {
 	else {
 		device.statusInfo.offTime = now.toISOString();
 	}
+	device.statusInfo.lastEventReason = eventReason;
 	powerOffChangeDetected=true;
 
 	var ob = {
@@ -204,10 +206,10 @@ function checkTimers() {
 			return ret;
 		}
 		
-		function updatePowerOffState(device, state) {
+		function updatePowerOffState(device, state, reason) {
 			console.info("!!!!!Update power state to %s (timer), device=%d", state, device.id);
 			device.powerOn = state; 
-			powerOffChangeEvent(device)
+			powerOffChangeEvent(device, undefined, "timer")
 			
 			fs.writeFileSync("./config.json", JSON.stringify(config,0,4));
 		}
@@ -215,12 +217,12 @@ function checkTimers() {
 		return Promise.each(_.values(config.devices), function (device){
 			var isTimeOn = isNow(device.event.timeOn);
 			var isTimeOff = isNow(device.event.timeOff);
-			
+
 			if(device.powerOn===true && device.statusInfo!==undefined && device.statusInfo.onTime!==undefined && device.maxOnTime!==undefined && device.maxOnTime>0) {
 				var onTime = (new Date(device.statusInfo.onTime)).getTime()/(1000*60);
 				var now = (new Date()).getTime()/(1000*60);
 				if((now-onTime)>=device.maxOnTime) {
-					isTimeOff = true;
+					updatePowerOffState(device, false, "maxOnTimer");
 				}
 				//console.info("DEBUG %s-%s = %s    --> %s --> %s", now, onTime, (now-onTime), device.maxOnTime, (now-onTime)>=device.maxOnTime);
 			}
@@ -235,18 +237,18 @@ function checkTimers() {
 				device.event.repeatingEvent.su ) {
 					var now = new Date();
 					switch(now.getDay()) {
-						case 0: if(device.event.repeatingEvent.su) {updatePowerOffState(device, setPowerOn);} break;
-						case 1: if(device.event.repeatingEvent.mo) {updatePowerOffState(device, setPowerOn);} break;
-						case 2: if(device.event.repeatingEvent.tu) {updatePowerOffState(device, setPowerOn);} break;
-						case 3: if(device.event.repeatingEvent.we) {updatePowerOffState(device, setPowerOn);} break;
-						case 4: if(device.event.repeatingEvent.th) {updatePowerOffState(device, setPowerOn);} break;
-						case 5: if(device.event.repeatingEvent.fr) {updatePowerOffState(device, setPowerOn);} break;
-						case 6: if(device.event.repeatingEvent.sa) {updatePowerOffState(device, setPowerOn);} break;
+						case 0: if(device.event.repeatingEvent.su) {updatePowerOffState(device, setPowerOn, "timer");} break;
+						case 1: if(device.event.repeatingEvent.mo) {updatePowerOffState(device, setPowerOn, "timer");} break;
+						case 2: if(device.event.repeatingEvent.tu) {updatePowerOffState(device, setPowerOn, "timer");} break;
+						case 3: if(device.event.repeatingEvent.we) {updatePowerOffState(device, setPowerOn, "timer");} break;
+						case 4: if(device.event.repeatingEvent.th) {updatePowerOffState(device, setPowerOn, "timer");} break;
+						case 5: if(device.event.repeatingEvent.fr) {updatePowerOffState(device, setPowerOn, "timer");} break;
+						case 6: if(device.event.repeatingEvent.sa) {updatePowerOffState(device, setPowerOn, "timer");} break;
 					}	
 				} else {
 					if(isTimeOn) device.event.timeOn = "";
 					if(isTimeOff) device.event.timeOff = "";
-					updatePowerOffState(device, setPowerOn);
+					updatePowerOffState(device, setPowerOn, "timer");
 				}
 			}
 		}).catch(function (err){
