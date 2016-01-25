@@ -86,8 +86,8 @@ app.ws('/', function(ws, req) {
 					ns(config).set(dot, value);
 					ns(ob).set(dot, value, true);
 					if(dot.indexOf("powerOn")!==-1) {
-						console.info("Power state is updated by user. %s=%s", dot, value);
-						powerOffChangeDetected = true;
+						console.info("Power state is updated by user. %s=%s", dot, value, parseInt(dot));
+						powerOffChangeEvent(config.devices[parseInt(dot.split(".")[1])], ws)
 					}
 					sendChangeForClients(createMsg("update", ob), ws);
 				}
@@ -155,6 +155,7 @@ function sendPortStatesToTarget(tryToSendCnt) {
 							});
 						} else {
 							nexa.nexaOn(controller_id, device.id, function() {
+
 								resolve();
 							});
 						}
@@ -170,6 +171,29 @@ function sendPortStatesToTarget(tryToSendCnt) {
 	});
 }
 
+function powerOffChangeEvent(device, ignoreClient) {
+	if(device.statusInfo===undefined) {
+		device.statusInfo = {}
+	}
+	var now = new Date();
+	if(device.powerOn){
+		device.statusInfo.onTime = now.toISOString();
+	}
+	else {
+		device.statusInfo.offTime = now.toISOString();
+	}
+	powerOffChangeDetected=true;
+
+	var ob = {
+				"devices": {
+				}
+			};
+
+	ob.devices[device.id.toString()] = {};
+	ob.devices[device.id.toString()].powerOn = device.powerOn;
+	ob.devices[device.id.toString()].statusInfo = device.statusInfo;
+	sendChangeForClients(createMsg("update", ob), ignoreClient);
+}
 function checkTimers() {
 	return function() {
 		function isNow(timeStr) {
@@ -181,17 +205,9 @@ function checkTimers() {
 		}
 		
 		function updatePowerOffState(device, state) {
-			console.info("Update power state to %s (timer), device=%d", state, device.id);
+			console.info("!!!!!Update power state to %s (timer), device=%d", state, device.id);
 			device.powerOn = state; 
-			powerOffChangeDetected=true;
-			
-			var ob = {
-				"devices": {
-				}
-			};
-			ob.devices[device.id.toString()] = {};
-			ob.devices[device.id.toString()].powerOn = state;
-			sendChangeForClients(createMsg("update", ob));
+			powerOffChangeEvent(device)
 			
 			fs.writeFileSync("./config.json", JSON.stringify(config,0,4));
 		}
@@ -199,6 +215,15 @@ function checkTimers() {
 		return Promise.each(_.values(config.devices), function (device){
 			var isTimeOn = isNow(device.event.timeOn);
 			var isTimeOff = isNow(device.event.timeOff);
+			
+			if(device.powerOn===true && device.statusInfo!==undefined && device.statusInfo.onTime!==undefined && device.maxOnTime!==undefined && device.maxOnTime>0) {
+				var onTime = (new Date(device.statusInfo.onTime)).getTime()/(1000*60);
+				var now = (new Date()).getTime()/(1000*60);
+				if((now-onTime)>=device.maxOnTime) {
+					isTimeOff = true;
+				}
+				//console.info("DEBUG %s-%s = %s    --> %s --> %s", now, onTime, (now-onTime), device.maxOnTime, (now-onTime)>=device.maxOnTime);
+			}
 			
 			if( isTimeOn && device.powerOn===false || isTimeOff && device.powerOn===true ) {
 				var setPowerOn = true;

@@ -4,6 +4,7 @@
             "name": "Auton lämmitin",
             "powerOn": false,
             "dim": 0,
+            "maxOnTime": 180,
             "event": {
                 "repeatingEvent": {
                     "mo": true,
@@ -14,16 +15,21 @@
                     "sa": false,
                     "su": false
                 },
-                "timeOn": "07:15",
-                "timeOff": "08:30"
+                "timeOn": "06:00",
+                "timeOff": "09:00"
             },
-            "id": 0
+            "id": 0,
+            "statusInfo": {
+                "offTime": "2016-01-25T17:57:29.744Z",
+                "onTime": "2016-01-25T17:57:29.181Z"
+            }
         },
         "1": {
             "id": 1,
-            "name": "Kytkin1",
+            "name": "Ikkunavalot",
             "powerOn": false,
             "dim": 0,
+            "maxOnTime": 0,
             "event": {
                 "timeOn": "07:30",
                 "timeOff": "08:00",
@@ -36,6 +42,10 @@
                     "sa": false,
                     "su": false
                 }
+            },
+            "statusInfo": {
+                "onTime": "2016-01-25T17:53:50.813Z",
+                "offTime": "2016-01-25T17:53:54.990Z"
             }
         },
         "2": {
@@ -43,6 +53,7 @@
             "name": "Kytkin2",
             "powerOn": false,
             "dim": 0,
+            "maxOnTime": 0,
             "event": {
                 "timeOn": "",
                 "timeOff": "",
@@ -55,13 +66,18 @@
                     "sa": false,
                     "su": false
                 }
+            },
+            "statusInfo": {
+                "onTime": "2016-01-25T17:52:43.109Z",
+                "offTime": "2016-01-25T17:52:46.368Z"
             }
         },
         "3": {
             "id": 3,
             "name": "Kytkin3",
-            "powerOn": false,
+            "powerOn": true,
             "dim": 0,
+            "maxOnTime": 0,
             "event": {
                 "timeOn": "",
                 "timeOff": "",
@@ -74,6 +90,10 @@
                     "sa": false,
                     "su": false
                 }
+            },
+            "statusInfo": {
+                "offTime": "2016-01-25T17:12:45.448Z",
+                "onTime": "2016-01-25T17:58:44.693Z"
             }
         }
     }
