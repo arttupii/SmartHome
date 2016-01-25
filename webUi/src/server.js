@@ -209,7 +209,7 @@ function checkTimers() {
 		function updatePowerOffState(device, state, reason) {
 			console.info("!!!!!Update power state to %s (timer), device=%d", state, device.id);
 			device.powerOn = state; 
-			powerOffChangeEvent(device, undefined, "timer")
+			powerOffChangeEvent(device, undefined, reason)
 			
 			fs.writeFileSync("./config.json", JSON.stringify(config,0,4));
 		}

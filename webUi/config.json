@@ -54,7 +54,7 @@
             "name": "Kytkin2",
             "powerOn": false,
             "dim": 0,
-            "maxOnTime": 0,
+            "maxOnTime": 1,
             "event": {
                 "timeOn": "",
                 "timeOff": "",
@@ -69,15 +69,15 @@
                 }
             },
             "statusInfo": {
-                "onTime": "2016-01-25T18:11:26.922Z",
-                "offTime": "2016-01-25T18:11:32.586Z",
+                "onTime": "2016-01-25T18:20:10.748Z",
+                "offTime": "2016-01-25T18:21:11.074Z",
                 "lastEventReason": "user"
             }
         },
         "3": {
             "id": 3,
             "name": "Kytkin3",
-            "powerOn": true,
+            "powerOn": false,
             "dim": 0,
             "maxOnTime": 0,
             "event": {
@@ -94,8 +94,8 @@
                 }
             },
             "statusInfo": {
-                "offTime": "2016-01-25T17:12:45.448Z",
-                "onTime": "2016-01-25T18:11:18.966Z",
+                "offTime": "2016-01-25T18:17:56.913Z",
+                "onTime": "2016-01-25T18:17:56.717Z",
                 "lastEventReason": "user"
             }
         }
