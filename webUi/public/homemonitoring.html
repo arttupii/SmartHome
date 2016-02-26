@@ -1,0 +1,114 @@
+<html>
+<head>
+<script type="text/javascript"
+src="http://dygraphs.com/1.1.1/dygraph-combined.js"></script>
+<script type="text/javascript" src="http://underscorejs.org/underscore.js"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+</head>
+<body>
+
+<div class="divCharts"></div>
+
+<script type="text/javascript">
+	var xmlhttp = new XMLHttpRequest();
+	var url = "data.json";
+
+	xmlhttp.onreadystatechange = function() {
+	if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+			var myArr = JSON.parse(xmlhttp.responseText);
+	myFunction(myArr);
+	}
+	};
+
+	xmlhttp.open("GET", url, true);
+	xmlhttp.send();
+
+	function getSearch(y, index) {
+		for(var i=0;i<y.length;i++) {
+			if(y[i][0]===index) return y[i][1];
+		} 
+	}
+
+	function appendDiv(name) {
+		var html = 	'<div id="' + name + '" style="width:800px; height:500px;"></div>';
+		$(".divCharts").append(html);
+	}
+
+	function myFunction(arr) {
+		var chartCnt = 0;
+		var charts = [];
+		arr.charts.forEach(function(chart){
+			var data = [];
+			var labels = [];
+			var series = _.values(chart.series);
+			var divName = "chart" + chartCnt++;
+			
+			appendDiv(divName);
+		
+			arr.data[chart.x].forEach(function(x){
+				var tmp = [x[0]];
+				series.forEach(function(serie){
+					if(serie.y!==undefined) {
+						serie.y.forEach(function(y_name){
+							tmp.push(getSearch(arr.data[y_name], x[0]));
+						}) 
+					}
+				});
+				data.push(tmp);
+			});
+				
+			var params = {
+				title: chart.title,
+				labels: [],
+				series: {},
+				legend: 'always',
+				axis: {},
+				axes: {
+					x: {
+						axisLabelFormatter: function(d, gran) {
+							try{
+								return arr.data[chart.x][d][1];
+							} catch(err) {
+								return "";
+							}
+						}
+					}
+				},
+				showRangeSelector: true		
+			}
+			
+			params.labels.push(chart.series.xlabel);
+			
+			var seriesIndex = 1;
+			series.forEach(function(serie){
+				var axis = "y" + (seriesIndex===1?"":seriesIndex);
+
+				if(serie.y!==undefined) {
+						serie.y.forEach(function(y_name){
+							params.labels.push(y_name);
+							params.series[y_name] = {
+									"axis": axis
+							};	
+						})
+						params.axis[axis] = {
+							// set axis-related properties here
+							labelsKMB: true,
+							drawGrid: true,
+							independentTicks: true
+						}
+						if(params.axes[axis]===undefined) params.axes[axis] = {};
+						params.axes[axis].valueRange = serie.valueRange;
+						params[axis + "label"] = serie.ylabel;
+						params[axis + "AxisLabelWidth"] = 60;
+						seriesIndex++;
+					}
+			});
+			console.info(params);
+			g = new Dygraph(
+			document.getElementById(divName), data, params);
+			charts.push(g);
+		});      
+	}
+</script>
+</body>
+</html>

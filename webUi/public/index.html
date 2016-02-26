@@ -9,248 +9,86 @@
 	<script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
 	<script src="underscore-min.js"></script>
 </head>
-<body>
-<script>
-var webSocket = undefined;
+   <body>
 
-function createMsg(cmd, data) {
-	return JSON.stringify({
-		date: Date.now(),
-		cmd: cmd,
-		data: data
-	});
-}
 
-var config = {};
-
-function merge(target, source) {
-    for (var property in source) {      
-		var sourceProperty = source[ property ];
-		if ( typeof sourceProperty === 'object' ) {
-			target[ property ] = merge( target[ property ], sourceProperty );
-			continue;
-		}
-		target[ property ] = sourceProperty;
-    }
-    for (var a = 2, l = arguments.length; a < l; a++) {
-        merge(target, arguments[a]);
-    }
-    return target;
-}
-
-function openWebsocket() {
-	console.info("Open WebSocket...");
-	var currentLocation = window.location;
-	console.info(JSON.stringify(currentLocation))
-	webSocket = new WebSocket((currentLocation.protocol==="http:"?"ws://":"wss://") + currentLocation.hostname + ":" + currentLocation.port,["protocolOne"]);
-	var open = false;
-	webSocket.onopen = function() {
-		console.info("WebSocket is open")
-		open = true;
-		
-		webSocket.onmessage = function (event) {
-		  var msg = JSON.parse(event.data);
-		  if(msg.cmd==="all") {
-				config = msg.data;
-				$(".devices").empty();
-				$(".devices").attr('disabled', false);
-				_.values(config.devices).forEach(function(device){
-				$(".devices").append(addDevice(device));
-					createEventHandlers(device);
-				});
-
-				$(".devices").enhanceWithin();
-				refleshUI(config);
-			}
-			if(msg.cmd==="pair") {
-				console.info("pairreq done");
-				enableElements($(".devices"));
-			}
-			if(msg.cmd==="update") {
-				console.info("update " + JSON.stringify(msg));
-				console.info("update   + " + JSON.stringify(merge(config, msg.data)) );
-				refleshUI(config);
-			}
-		}
-		
-		  // Send the msg object as a JSON-formatted string.
-		webSocket.send(createMsg("get", ""));
-	}
 	
-	webSocket.onclose = function (event) {
-		console.log("WebSocket closed");
-		$(".devices").empty();
-		$(".devices").append(connectionLost());
-		webSocket = undefined;
-	}
 	
-	webSocket.onerror = function (event) {
-		console.log("WebSocket onerror");
-		$(".devices").empty();
-		$(".devices").append(connectionLost());
-		webSocket = undefined;
-	}	
 	
+<!-- Start of first page: #one -->
+<div data-role="page" id="one">
 
-}
-openWebsocket();
-setInterval(function() {
-	if(webSocket==undefined) {
-		openWebsocket();
-	}
-}, 5000);
-	
-function sendUpdateDevice(device) {
-  if(webSocket) {
-	webSocket.send(createMsg("update", device));
+	<div data-role="header">
+		<h1>Multi-page</h1>
+	</div><!-- /header -->
+
+	<div role="main" class="ui-content">
+		<h2>SmartHome</h2>
+		<p><a href="#nexaSwitches" data-direction="reverse" class="ui-btn ui-shadow ui-corner-all ui-btn-b">Nexa switches</a></p>
+		<p><a href="#homeMonitoring" data-direction="reverse" class="ui-btn ui-shadow ui-corner-all ui-btn-b">Home Monitoring</a></p>
+	</div><!-- /content -->
+
+	<div data-role="footer" data-theme="a">
+		<h4></h4>
+	</div><!-- /footer -->
+</div><!-- /page one -->
+
+<script language="javascript" type="text/javascript">
+  function resizeIframe(obj) {
+	 setInterval(function(){
+		 var newValue = obj.contentWindow.document.body.scrollHeight + 'px';
+		 if(newValue!==obj.style.height) {
+			 console.info(obj.style.height);
+			 obj.style.height = newValue;
+		 }
+	}, 1000);
+
   }
-}
-
-function sendPairRequestToDevice(deviceId, cmd) {
-  if(webSocket) {
-	webSocket.send(createMsg("pair", {device: deviceId, cmd: cmd}));
-  }
-}
-
-function createEventHandlers(device) {
-	function eventChangeDay(day) {
-		console.info("day change event ");
-
-		var update = {"devices":{"dummy":""}};
-		update.devices[device.id] = {"event":{"repeatingEvent":{}}};
-		update.devices[device.id].event.repeatingEvent[day] = $("#checkbox-" + device.id + "-" + day).is(":checked");
-		sendUpdateDevice(update);
-	}
-	
-	function eventSwitchChange() {
-		console.info("switch change event");
-		var update = {"devices":{"dummy":""}};
-		update.devices[device.id] = { 
-			"powerOn": $("#flipswitch-checkbox-" + device.id + "-powerOn").is(":checked")
-		};
-		sendUpdateDevice(update);
-	}
-	
-	function eventTimeChange(timer) {
-		console.info("Change event");
-		var update = {"devices":{"dummy":""}};
-		update.devices[device.id] = { 
-			"event": {}
-		};
-		
-		update.devices[device.id].event[timer==="on"?"timeOn":"timeOff"] = $("#time-" + device.id + "-" + timer).val();
-		sendUpdateDevice(update);
-	}
-	
-	$( "#checkbox-" + device.id + "-mo" ).change(function() {eventChangeDay("mo");});
-	$( "#checkbox-" + device.id + "-tu" ).change(function() {eventChangeDay("tu");});
-	$( "#checkbox-" + device.id + "-we" ).change(function() {eventChangeDay("we");});
-	$( "#checkbox-" + device.id + "-th" ).change(function() {eventChangeDay("th");});
-	$( "#checkbox-" + device.id + "-fr" ).change(function() {eventChangeDay("fr");});
-	$( "#checkbox-" + device.id + "-sa" ).change(function() {eventChangeDay("sa");});
-	$( "#checkbox-" + device.id + "-su" ).change(function() {eventChangeDay("su");});
-	
-	$("#time-" + device.id + "-on").change(function() {eventTimeChange("on");});
-	$("#time-" + device.id + "-off").change(function() {eventTimeChange("off");});
-	
-	$("#flipswitch-checkbox-" + device.id + "-powerOn").change(eventSwitchChange);
-	
-	$(".button-" + device.id + "-unpair").click(function(){
-		disableElements($(".devices"));
-		sendPairRequestToDevice(device.id, "unpair");
-	});
-	$(".button-" + device.id + "-pair").click(function(){
-		disableElements($(".devices"));
-		sendPairRequestToDevice(device.id, "pair");
-	});
-}
-
-function disableElements(el) {
-	for (var i = 0; i < el.length; i++) {
-		el[i].disabled = true;
-
-		disableElements(el[i].children);
-	}
-}
-
-function enableElements(el) {
-	for (var i = 0; i < el.length; i++) {
-		el[i].disabled = false;
-
-		enableElements(el[i].children);
-	}
-}
-	
-function refleshUI(config) {
-
-	_.values(config.devices).forEach(function(device){
-		console.info("Refresh");
-		$("#checkbox-" + device.id + "-mo").attr('checked', device.event.repeatingEvent.mo).checkboxradio('refresh');
-		$("#checkbox-" + device.id + "-tu").attr('checked', device.event.repeatingEvent.tu).checkboxradio('refresh');
-		$("#checkbox-" + device.id + "-we").attr('checked', device.event.repeatingEvent.we).checkboxradio('refresh');
-		$("#checkbox-" + device.id + "-th").attr('checked', device.event.repeatingEvent.th).checkboxradio('refresh');
-		$("#checkbox-" + device.id + "-fr").attr('checked', device.event.repeatingEvent.fr).checkboxradio('refresh');
-		$("#checkbox-" + device.id + "-sa").attr('checked', device.event.repeatingEvent.sa).checkboxradio('refresh');
-		$("#checkbox-" + device.id + "-su").attr('checked', device.event.repeatingEvent.su).checkboxradio('refresh');
-
-		$("#time-" + device.id + "-on").val(device.event.timeOn);
-		$("#time-" + device.id + "-off").val(device.event.timeOff);
-
-		$("#flipswitch-checkbox-" + device.id + "-powerOn").attr('checked', device.powerOn).flipswitch( "refresh" );	
-		$("#flipswitch-checkbox-" + device.id + "-powerOn").text(device.id);
-	});
-}
-
-function connectionLost() {
-	var html = 'Connection lost...';
-	return html;
-}
-
-function addDevice(device) {
-  var html = ' \
-	<div data-role="collapsible" class="device-$ID" id="device-$ID" data-content-theme="a" >\
-		<h4>$DEVICE_NAME</h4>\
-		<form>\
-		    <label for="time-$ID-on">Päälle</label><input type="time" data-clear-btn="false" name="time-$ID-on" id="time-$ID-on" value="">\
-		    <label for="time-$ID-off">Pois päältä</label><input type="time" data-clear-btn="true" name="time-$ID-off" id="time-$ID-off" value="">\
-		</form>\
-		\
-		<form>\
-		    <fieldset data-role="controlgroup" data-type="horizontal" style="text-align: center">\
-		        <input type="checkbox" name="checkbox-$ID-mo" id="checkbox-$ID-mo"><label for="checkbox-$ID-mo">Mo</label>\
-		        <input type="checkbox" name="checkbox-$ID-tu" id="checkbox-$ID-tu"><label for="checkbox-$ID-tu">Tu</label>\
-		        <input type="checkbox" name="checkbox-$ID-we" id="checkbox-$ID-we"><label for="checkbox-$ID-we">We</label>\
-				<input type="checkbox" name="checkbox-$ID-th" id="checkbox-$ID-th"><label for="checkbox-$ID-th">Th</label>\
-				<input type="checkbox" name="checkbox-$ID-fr" id="checkbox-$ID-fr"><label for="checkbox-$ID-fr">Fr</label>\
-				<input type="checkbox" name="checkbox-$ID-sa" id="checkbox-$ID-sa"><label for="checkbox-$ID-sa">Sa</label>\
-				<input type="checkbox" name="checkbox-$ID-su" id="checkbox-$ID-su"><label for="checkbox-$ID-su">Su</label>\
-		    </fieldset>\
-		</form>\
-		\
-		<form><div data-role="fieldcontain"> \
-		    <label for="flipswitch-checkbox-$ID-powerOn">Kytkimen tila:</label>\
-		    <input type="flipswitch-checkbox" data-role="flipswitch" name="flipswitch-checkbox-$ID-powerOn" id="flipswitch-checkbox-$ID-powerOn">\
-		</div></form> \
-			<button type="button" data-icon="plus"  data-inline="true" data-iconpos="notext" class="button-$ID-pair"></button> \
-			<button type="button" data-icon="delete"  data-inline="true" data-iconpos="notext" class="button-$ID-unpair"></button> \
-	</div>';
-
-	function replaceAll(find, replace) {
-		while(html.indexOf(find)!==-1) {
-			html = html.replace(find, replace);
-		}
-	}
-	replaceAll("$DEVICE_NAME", device.name);
-	replaceAll("$ID", device.id);
-	
-	return html;
-}
-
 </script>
 
-<div class="devices" style="color:#0000FF">
-</div>
 
-</body>
+<div data-role="page" id="nexaSwitches" data-theme="a">
+
+	<div data-role="header">
+		<h1>Home Monitoring</h1>
+	</div><!-- /header -->
+
+	<div role="main" class="ui-content">
+		<h2>Nexa switches</h2>
+		<iframe src="nexa.html" width="100%"   onload="resizeIframe(this)">
+			<p>Your browser does not support iframes.</p>
+		</iframe>
+		
+		<p><a href="#homeMonitoring" data-direction="reverse" class="ui-btn ui-shadow ui-corner-all ui-btn-b">Home Monitoring</a></p>
+	</div><!-- /content -->
+
+	<div data-role="footer">
+		<h4></h4>
+	</div><!-- /footer -->
+</div><!-- /page two -->
+
+
+<div data-role="page" id="homeMonitoring" data-theme="a">
+
+	<div data-role="header">
+		<h1>Home Monitoring</h1>
+	</div><!-- /header -->
+
+	<div role="main" class="ui-content">
+		<h2>Home Monitoring</h2>
+		<iframe src="homemonitoring.html" width="100%"   onload="resizeIframe(this)">
+			<p>Your browser does not support iframes.</p>
+		</iframe>
+		
+		<p><a href="#nexaSwitches" data-direction="reverse" class="ui-btn ui-shadow ui-corner-all ui-btn-b">Nexa switches"</a></p>
+	</div><!-- /content -->
+
+	<div data-role="footer">
+		<h4></h4>
+	</div><!-- /footer -->
+</div><!-- /page two -->
+
+
+   </body>
+
 </html>
-
