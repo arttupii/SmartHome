@@ -10,6 +10,7 @@ var Promise = require('bluebird');
 var nexa = require('nexa');
 var ns = require('nested-structure');
 var toDot = require('to-dot');
+var monitoring = require('./monitoring.js');
 
 var server = express();
 server.use(express.static('./public'));
@@ -66,6 +67,9 @@ app.use(function(req, res, next) {
 });
 
 app.use(express.static('./public'));
+app.get('/data', function (req,res) {
+   res.send(monitoring.getMeasurements());
+});
 
 app.ws('/', function(ws, req) {
 	ws.on('message', function(msg) {

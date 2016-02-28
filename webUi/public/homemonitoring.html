@@ -11,7 +11,7 @@ src="http://dygraphs.com/1.1.1/dygraph-combined.js"></script>
 
 <script type="text/javascript">
 	var xmlhttp = new XMLHttpRequest();
-	var url = "data.json";
+	var url = "data";
 
 	xmlhttp.onreadystatechange = function() {
 	if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
@@ -67,17 +67,24 @@ src="http://dygraphs.com/1.1.1/dygraph-combined.js"></script>
 					x: {
 						axisLabelFormatter: function(d, gran) {
 							try{
-								return arr.data[chart.x][d][1];
+								var d = new Date(arr.data[chart.x][d][1]);
+								var d = new Date();
+								var weekday = ["Su","Ma","Ti","Ke","To","Pe","La"];
+								var month = ["tammi", "helmi", "maalis", "huhti", "touko", "kesä", "heinä", "elo", "syys", "loka", "marras", "joulu"];
+								
+								return d.getHours() + ":00 " + weekday[d.getDay()] + "\n"
+								       + d.getDate() + "." + month[d.getMonth()] + "\n" + d.getFullYear();
 							} catch(err) {
 								return "";
 							}
 						}
 					}
 				},
-				showRangeSelector: true		
+				showRangeSelector: true,
+				rangeSelectorHeight: 60
 			}
 			
-			params.labels.push(chart.series.xlabel);
+			params.labels.push(chart.xlabel);
 			
 			var seriesIndex = 1;
 			series.forEach(function(serie){
