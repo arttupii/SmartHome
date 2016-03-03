@@ -9,6 +9,7 @@
 	"nexa": "~0.2.5",
 	"nested-structure": "1.0.4",
 	"to-dot": "0.0.4",
-	"express-ws": "0.2.6"
+	"express-ws": "0.2.6",
+	"ds18b20":"0.1.0" 
 	}
 }

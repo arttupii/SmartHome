@@ -4,12 +4,20 @@ var config = JSON.parse(fs.readFileSync("./config.json"));
 var setup = JSON.parse(fs.readFileSync("./setupfile.json"));
 var Promise = require('bluebird');
 var exec = require('child_process').exec;
+var datalogger = require('./datalogger.js');
 
-var dataFile = "./data.json";
-var waterConsumptionPrevius;
-var waterConsumption;
-var data = JSON.parse(fs.readFileSync(dataFile));
+var chartConfig = JSON.parse(fs.readFileSync("./chartConfig.json"));
+var ds18b20 = require('ds18b20');
 
+var tempSensors = [];
+
+var db = {};
+
+var water = {
+	"previusHelper":undefined,
+	"consumptionCumulative":0
+}
+var data = {};
 
 function runCmd(cmd) {
 	return new Promise(function(resolve, reject){
@@ -22,52 +30,77 @@ function runCmd(cmd) {
 	});
 }
 
-   
+function appendData(dataName, data) {
+	if(db[dataName]===undefined) {
+		db[dataName] = [];
+	}
+	db[dataName].push(data);
+	datalogger.append("data/"+dataName, data);
+}
+
 function update(){
-	var d=new Date();
+	var timetamp = parseInt(new Date().getTime()/1000/60); //minutes since 1970
 	var index = 0;
-	if(data.data.time===undefined) {
-		data.data.time = [[index,d.getTime()]];
-	} else {
-		index = data.data.time[data.data.time.length-1][0] + 1;
-		data.data.time.push([index,d.getTime()]);
-	}
-	if(waterConsumption===undefined) {
-		if(data.data.water_m3!==undefined) {
-			waterConsumption = data.data.water_m3[data.data.water_m3.length-1][1];
-		} else {
-			waterConsumption = 0;
-		}
-		
-	}
-	
-	console.info("Read measurements, index=%d",index);
-	runCmd('sh ./src/ocrwater.sh')
+
+	console.info("Read measurements, timetamp=%d",timetamp);
+	//runCmd('sh ./src/ocrwater.sh')
+	Promise.try(function(){return 0.5})
 	.then(function(c){
-		waterConsumptionPrevius=waterConsumptionPrevius==undefined?c:waterConsumptionPrevius;
-		console.info("current water consumption is %sm^3, previus %sm^3", c/10000, waterConsumptionPrevius/10000);
-		if(c>=waterConsumptionPrevius) {
-			waterConsumption+=(c-waterConsumptionPrevius)/10000;
-		} else {
-			waterConsumption+=(c + (9999-waterConsumptionPrevius))/10000;
+		if(c!==undefined && (!isNaN(c)) && c!=="") {
+			water.previusHelper=water.previusHelper==undefined?c:water.previusHelper;
+			console.info("current water consumption is %sm^3, water.previusHelper %sm^3", c/10000, water.previusHelper/10000);
+			var tmpConsumptionCumulative = water.consumptionCumulative===undefined?0:water.consumptionCumulative;
+			console.info("dddddddddd" + tmpConsumptionCumulative);
+			if(c>=water.previusHelper) {
+				console.info("KKK", water.consumptionCumulative,c,water.previusHelper);
+				water.consumptionCumulative+=(c-water.previusHelper)/10000;
+			} else {
+				water.consumptionCumulative+=(c + (9999-water.previusHelper))/10000;
+			}
+			water.previusHelper = c;
+			var change = water.consumptionCumulative-tmpConsumptionCumulative;
+			console.info("water usage cumulative is %sm^3", water.consumptionCumulative, change);
+			
+
+			appendData("water_consumption",[timetamp,change,water.consumptionCumulative]);
 		}
-		waterConsumptionPrevius = c;
-		console.info("water consumption is %sm^3", waterConsumption);
-		
-		if(data.data.water_m3===undefined) {
-			data.data.water_m3 = [];
-		}
-		data.data.water_m3.push([index,waterConsumption]);
 	})
 	.then(function(){
-		fs.writeFileSync(dataFile, JSON.stringify(data));
+		//read temperature sensors
+		return Promise.each(tempSensors, function(id){
+			var temp = ds18b20.temperatureSync(id);
+			console.info("Temperature %s ---> %sC", id, temp);
+			appendData("temp_" + id, [timetamp,temp]);
+		});
 	})
 }
 
-update();
-setInterval(update, 10*60*1000);
+Promise.map(fs.readdirSync('data'), function(dataFile){
+	console.info("Read measurements from %s file",dataFile);
+	db[dataFile] = datalogger.read("data/" + dataFile);
+})
+.then(function(){
+		tempSensors;
+		return new Promise(function(resolve){
+			ds18b20.sensors(function(err, ids) {
+			  // got sensor IDs ...
+			  tempSensors = ids;
+			  console.info("Detected temperature sensors: %s", JSON.stringify(ids))
+			  resolve();
+			});
+		});
+})
+.then(function(){
+	update();
+	setInterval(update, 10*60*1000);	
+});
 
-module.exports.getMeasurements = function(){return data};
+
+
+module.exports.getMeasurements = function(req){
+	chartConfig.data = db;
+	return chartConfig;
+};
 
 /*
 {

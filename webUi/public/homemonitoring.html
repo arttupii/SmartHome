@@ -67,8 +67,7 @@ src="http://dygraphs.com/1.1.1/dygraph-combined.js"></script>
 					x: {
 						axisLabelFormatter: function(d, gran) {
 							try{
-								var d = new Date(arr.data[chart.x][d][1]);
-								var d = new Date();
+								var d = new Date(arr.data[chart.x][d][1]*1000*60);
 								var weekday = ["Su","Ma","Ti","Ke","To","Pe","La"];
 								var month = ["tammi", "helmi", "maalis", "huhti", "touko", "kesä", "heinä", "elo", "syys", "loka", "marras", "joulu"];
 								

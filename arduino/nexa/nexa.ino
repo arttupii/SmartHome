@@ -5,17 +5,14 @@ using namespace std;
 //*****
 const static unsigned long controller_id = 4982814;
 
+const char *statusOk = "{\"status\":\"ok\"}";
+const char *statusNOK = "{\"status\":\"nok\"}";
+
 int nexaPin = 2;
 int powerConsumptionPin = 3; //Can be 2 or 3
 int imp_kWh = 10000;
-unsigned long long powerConsuptionPulses = 0;
 
 NexaCtrl nexa(nexaPin);
-
-void powerConsumptionCountInterrupt() {
-  powerConsuptionPulses = powerConsuptionPulses + 1;
-}
-
 
 int digCount(int v) {
   int ret = 0;
@@ -28,14 +25,36 @@ int digCount(int v) {
 }
 
 
+unsigned long long getAndUpdateCounter() {
+  static unsigned long long u = 0;
+  unsigned long long ret;
+
+  do{
+    if(TIFR1&(1<<TOV1)) { //TOV1: Timer/Counter1, Overflow Flag
+      u++;
+      TIFR1 &= ~(1<TOV1);    }
+    ret = ((u<<16))|TCNT1; 
+  } 
+  while(TIFR1&(1<<TOV1));
+  return ret;
+}
+
 void setup()
 {
-  attachInterrupt(powerConsumptionPin, powerConsumptionCountInterrupt, RISING);
+  //Use timer 1 as counter
+  TCNT1 = 0x0;
+  TCCR1A = 0x00;
+  TIFR1 &= ~(1<TOV1);
+  TCCR1B = 0x7; // Turn on the counter, Clock on Rise
+  TCCR1C = 0x00;
+  TIMSK1 = 0x00;
+  
+  pinMode(4, INPUT); 
+  digitalWrite(4, HIGH);       // turn on pullup resistors
 
   // start serial port at 9600 bps:
   Serial.begin(57600);  
   Serial.setTimeout(1000);
-  sei();
 }
 
 int parseInt(String &v) {
@@ -60,7 +79,7 @@ const char * setDeviceAsSwitch(const char *str) {
     nexa.DeviceOff(controller_id, device);
   }
 
-  return "ok";
+  return statusOk;
 }
 
 const char * setDeviceAsDim(const char *str) {
@@ -70,7 +89,7 @@ const char * setDeviceAsDim(const char *str) {
 
   nexa.DeviceDim(controller_id, device, dim);
 
-  return "ok";  
+  return statusOk;  
 }
 
 const char * pairing(const char *str) {
@@ -83,21 +102,18 @@ const char * pairing(const char *str) {
     nexa.DeviceOn(controller_id, device);
   }
 
-  return "ok";  
+  return statusOk;  
 }
 
 const char * getPowerConsumption() {
-  unsigned long long t;
-  cli();
-  t = powerConsuptionPulses;
-  sei();
+  unsigned long long t = getAndUpdateCounter();
 
   char text[50];
   memset(text,0,sizeof(text));
   text[0]='0';
 
   int i = 0;	
-  while(t!=0) {
+  for(int l=0;l<16;l++) {
     char num = (t%10) + '0';
     text[i]=num;
     t/=10;
@@ -108,13 +124,18 @@ const char * getPowerConsumption() {
     }
   }
   strrev(text);
-  
-  return text;  
+
+  static char ret[100];
+  sprintf(ret,"{\"kWh\":%s,\"status\":\"ok\"}", text);
+
+  return ret;  
 }
 
 static String str;
 void loop()
 {
+  //update counter as often as possible
+  getAndUpdateCounter();
   if (Serial.available() > 0) {
     str = Serial.readStringUntil('\n');
     if(str.indexOf("on ")==0) {
@@ -123,16 +144,20 @@ void loop()
     else  if(str.indexOf("off ")==0) {
       Serial.println(setDeviceAsSwitch(str.c_str()));
     }  
-    if(str.indexOf("dim ")==0) {
+    else if(str.indexOf("dim ")==0) {
       Serial.println(setDeviceAsSwitch(str.c_str()));
-    }  
-    if(str.indexOf("pairing ")==0) {
-      Serial.println(pairing(str.c_str()));
-    }  
-    if(str.indexOf("getPowerConsumption")==0) {
-      Serial.println(getPowerConsumption());
-      Serial.println("ok");
     } 
+    else if(str.indexOf("pairing ")==0) {
+      Serial.println(pairing(str.c_str()));
+    } 
+    else if(str.indexOf("getPowerConsumption")==0) {
+      Serial.println(getPowerConsumption());
+    } 
+    else {
+      Serial.println(statusNOK);
+    }
   }
 }
+
+
 

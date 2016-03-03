@@ -1,0 +1,59 @@
+{
+	"charts": [
+		{
+			"title": "Veden kulutus",
+			"series": {
+				"1": {
+					"y": [
+						"water_m3"
+					],
+					"ylabel": "m3",
+					"valueRange": [
+						0,
+						null
+					]
+				}
+			},
+			"y": [
+				"data1",
+				"data3",
+				"data2"
+			],
+			"x": "time",
+			"xlabel": "time"
+		},
+		{
+			"title": "K2",
+			"series": {
+				"1": {
+					"y": [
+						"data1",
+						"data2"
+					],
+					"ylabel": "lämpötila",
+					"valueRange": [
+						-40,
+						50
+					]
+				},
+				"2": {
+					"y": [
+						"data3"
+					],
+					"ylabel": "sähkö",
+					"valueRange": [
+						0,
+						300
+					]
+				}
+			},
+			"y": [
+				"data1",
+				"data3",
+				"data2"
+			],
+			"x": "data4",
+			"xlabel": "time"
+		}
+	]
+}
