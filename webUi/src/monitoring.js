@@ -15,7 +15,7 @@ var db = {};
 
 var water = {
 	"previusHelper":undefined,
-	"consumptionCumulative":0
+	"consumptionCumulative":undefined
 }
 var data = {};
 
@@ -43,23 +43,32 @@ function update(){
 	var index = 0;
 
 	console.info("Read measurements, timetamp=%d",timetamp);
-	//runCmd('sh ./src/ocrwater.sh')
-	Promise.try(function(){return 0.5})
+	
+	runCmd('sh ./src/ocrwater.sh')
+	//Promise.try(function(){return 0.5})
 	.then(function(c){
 		if(c!==undefined && (!isNaN(c)) && c!=="") {
-			water.previusHelper=water.previusHelper==undefined?c:water.previusHelper;
-			console.info("current water consumption is %sm^3, water.previusHelper %sm^3", c/10000, water.previusHelper/10000);
-			var tmpConsumptionCumulative = water.consumptionCumulative===undefined?0:water.consumptionCumulative;
-			console.info("dddddddddd" + tmpConsumptionCumulative);
+			if(water.consumptionCumulative===undefined || water.previusHelper==undefined) {
+				water.previusHelper=c;
+
+				if(db.water_consumption!==undefined && db.water_consumption.length>0) {
+					water.consumptionCumulative = db.water_consumption[db.water_consumption.length-1][2];
+				} else {
+					water.consumptionCumulative = 0;
+				}
+			}
+			console.info("current water consumption is %sm^3, water.previusHelper %sm^3, water.consumptionCumulative=%s", c/10000, water.previusHelper/10000,water.consumptionCumulative);
+
+			var tmpConsumptionCumulative = water.consumptionCumulative;
+
 			if(c>=water.previusHelper) {
-				console.info("KKK", water.consumptionCumulative,c,water.previusHelper);
 				water.consumptionCumulative+=(c-water.previusHelper)/10000;
 			} else {
 				water.consumptionCumulative+=(c + (9999-water.previusHelper))/10000;
 			}
 			water.previusHelper = c;
 			var change = water.consumptionCumulative-tmpConsumptionCumulative;
-			console.info("water usage cumulative is %sm^3", water.consumptionCumulative, change);
+			console.info("water usage cumulative is %sm^3, change=%s", water.consumptionCumulative, change);
 			
 
 			appendData("water_consumption",[timetamp,change,water.consumptionCumulative]);
@@ -77,7 +86,7 @@ function update(){
 
 Promise.map(fs.readdirSync('data'), function(dataFile){
 	console.info("Read measurements from %s file",dataFile);
-	db[dataFile] = datalogger.read("data/" + dataFile);
+	db[dataFile] = datalogger.read("./data/" + dataFile);
 })
 .then(function(){
 		tempSensors;

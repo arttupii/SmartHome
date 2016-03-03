@@ -19,11 +19,15 @@ function append(dataFile, data) {
 
 function read(dataFile) {
 	var file = fs.readFileSync(dataFile, 'utf8');
+
 	file = file.split("\n");
 	var ret = [];
-	
+
 	file.forEach(function(line){
-		ret.push(line.split(";"));
+		var s = line.split(";");
+		if(s.length>=2) {
+			ret.push(_.map(s,function(v){return parseFloat(v)}));
+		}
 	});
 	return ret;
 }
