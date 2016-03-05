@@ -42,7 +42,7 @@ NexaCtrl::NexaCtrl(unsigned int tx_pin)
     tx_pin_ = tx_pin;
 
     pinMode(tx_pin_, OUTPUT);
-
+    digitalWrite(tx_pin_, LOW);
     // kLowPulseLength + kDimLength because we need room for dim bits if
     // we want to transmit a dim signal
     low_pulse_array = (int*)calloc((kLowPulseLength + (2 * kDimLength)), sizeof(int));
@@ -55,6 +55,8 @@ void NexaCtrl::DeviceOn(unsigned long controller_id, unsigned int device_id)
     SetBit(kOnFlagOffset, 1);
     SetDeviceBits(device_id);
     Transmit(kLowPulseLength);
+    
+    digitalWrite(tx_pin_, LOW);
 }
 
 void NexaCtrl::DeviceOff(unsigned long controller_id, unsigned int device_id)
@@ -64,6 +66,8 @@ void NexaCtrl::DeviceOff(unsigned long controller_id, unsigned int device_id)
     SetBit(kOnFlagOffset, 0);
     SetDeviceBits(device_id);
     Transmit(kLowPulseLength);
+    
+    digitalWrite(tx_pin_, LOW);
 }
 
 void NexaCtrl::DeviceDim(unsigned long controller_id, unsigned int device_id, unsigned int dim_level)
@@ -86,6 +90,8 @@ void NexaCtrl::DeviceDim(unsigned long controller_id, unsigned int device_id, un
         SetBit(kDimOffset+bit, dim_bits[bit]);
     }
     Transmit(kLowPulseLength + (kDimLength * 2));
+    
+    digitalWrite(tx_pin_, LOW);
 }
 
 void NexaCtrl::GroupOn(unsigned long controller_id)
