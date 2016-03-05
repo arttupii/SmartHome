@@ -8,8 +8,7 @@ const static unsigned long controller_id = 4982814;
 const char *statusOk = "{\"status\":\"ok\"}";
 const char *statusNOK = "{\"status\":\"nok\"}";
 
-int nexaPin = 2;
-int powerConsumptionPin = 3; //Can be 2 or 3
+int nexaPin = 3;
 int imp_kWh = 10000;
 
 NexaCtrl nexa(nexaPin);
@@ -49,8 +48,8 @@ void setup()
   TCCR1C = 0x00;
   TIMSK1 = 0x00;
   
-  pinMode(4, INPUT); 
-  digitalWrite(4, HIGH);       // turn on pullup resistors
+  pinMode(5, INPUT); 
+  digitalWrite(5, HIGH);       // turn on pullup resistors
 
   // start serial port at 9600 bps:
   Serial.begin(57600);  
@@ -125,6 +124,10 @@ const char * getPowerConsumption() {
   }
   strrev(text);
 
+  while(text[0]=='0' && text[1]!='.') {
+    memcpy(text,&text[1],sizeof(text));
+  }
+
   static char ret[100];
   sprintf(ret,"{\"kWh\":%s,\"status\":\"ok\"}", text);
 
@@ -150,7 +153,7 @@ void loop()
     else if(str.indexOf("pairing ")==0) {
       Serial.println(pairing(str.c_str()));
     } 
-    else if(str.indexOf("getPowerConsumption")==0) {
+    else if(str.indexOf("data")==0) {
       Serial.println(getPowerConsumption());
     } 
     else {
