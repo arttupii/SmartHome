@@ -6,17 +6,21 @@ var Promise = require('bluebird');
 var exec = require('child_process').exec;
 var datalogger = require('./datalogger.js');
 
-var chartConfig = JSON.parse(fs.readFileSync("./chartConfig.json"));
 var ds18b20 = require('ds18b20');
 
 var tempSensors = [];
-
-var db = {};
+var electronicMeter;
 
 var water = {
 	"previusHelper":undefined,
 	"consumptionCumulative":undefined
 }
+
+var electricity = {
+	"previusHelper":undefined,
+	"consumptionCumulative":undefined
+};
+
 var data = {};
 
 function runCmd(cmd) {
@@ -30,30 +34,25 @@ function runCmd(cmd) {
 	});
 }
 
-function appendData(dataName, data) {
-	if(db[dataName]===undefined) {
-		db[dataName] = [];
-	}
-	db[dataName].push(data);
-	datalogger.append("data/"+dataName, data);
-}
-
 function update(){
 	var timetamp = parseInt(new Date().getTime()/1000/60); //minutes since 1970
 	var index = 0;
 
+	datalogger.newRecord(timetamp);
+	var revRecord = datalogger.getPrev();
+	
 	console.info("Read measurements, timetamp=%d",timetamp);
 	
-	runCmd('sh ./src/ocrwater.sh')
-	//Promise.try(function(){return 0.5})
+	return runCmd('sh ./src/ocrwater.sh')
+	//Promise.try(function(){return 3454}).delay(5000)
 	.then(function(c){
 		if(c!==undefined && (!isNaN(c)) && c!=="") {
 			if(water.consumptionCumulative===undefined || water.previusHelper==undefined) {
 				water.previusHelper=c;
-
-				if(db.water_consumption!==undefined && db.water_consumption.length>0) {
-					water.consumptionCumulative = db.water_consumption[db.water_consumption.length-1][2];
-				} else {
+				try{
+					water.consumptionCumulative = revRecord.waterConsumption.cumulative;
+				} catch(err) {
+					console.info("Trying read fore previus waterConsumption %s", err);
 					water.consumptionCumulative = 0;
 				}
 			}
@@ -66,12 +65,18 @@ function update(){
 			} else {
 				water.consumptionCumulative+=(c + (9999-water.previusHelper))/10000;
 			}
-			water.previusHelper = c;
-			var change = water.consumptionCumulative-tmpConsumptionCumulative;
-			console.info("water usage cumulative is %sm^3, change=%s", water.consumptionCumulative, change);
 			
-
-			appendData("water_consumption",[timetamp,change,water.consumptionCumulative]);
+			if(isNaN(water.consumptionCumulative)) {
+				console.info("Something is wrong!!!. water consumption calculation failes, c=%s, tmpConsumptionCumulative=%s, water=%s", c, tmpConsumptionCumulative, JSON.stringify(water));
+				water.consumptionCumulative = tmpConsumptionCumulative;
+			} else { 
+				water.previusHelper = c;
+				var change = water.consumptionCumulative-tmpConsumptionCumulative;
+				console.info("water usage cumulative is %sm^3, change=%s", water.consumptionCumulative, change);
+				
+				datalogger.updateRecord("waterConsumption", "change",change);
+				datalogger.updateRecord("waterConsumption", "cumulative",water.consumptionCumulative);
+			}
 		}
 	})
 	.then(function(){
@@ -79,14 +84,45 @@ function update(){
 		return Promise.each(tempSensors, function(id){
 			var temp = ds18b20.temperatureSync(id);
 			console.info("Temperature %s ---> %sC", id, temp);
-			appendData("temp_" + id, [timetamp,temp]);
+			
+			datalogger.updateRecord("temp_" + id, "temperature", temp);
 		});
 	})
+	.then(function() {
+		return electronicMeter.sendCmd("data")
+		.then(function(data){
+			if(data.kWh!==undefined) {
+				if(electricity.consumptionCumulative===undefined || electricity.previusHelper==undefined) {
+					electricity.previusHelper=data.kWh;
+					
+					try{
+						electricity.consumptionCumulative = revRecord.electricityConsumption.cumulative;
+					} catch(err) {
+						console.info("Trying read fore previus electricityConsumption %s", err);
+						electricity.consumptionCumulative = 0;
+					}
+				}
+				var change = data.kWh-electricity.previusHelper;
+				electricity.previusHelper = data.kWh;
+
+				electricity.consumptionCumulative += change; 
+				
+				console.info("electricity usage cumulative is %skWh, change=%skWh, measured=%s", electricity.consumptionCumulative, change, data.kWh);
+
+				datalogger.updateRecord("electricityConsumption", "change", change);
+				datalogger.updateRecord("electricityConsumption", "cumulative", electricity.consumptionCumulative);
+			} else {
+				console.info("error during read electricity_consumption " + JSON.stringify(data));
+			}
+		})
+	})
+	.then(function(){
+		datalogger.appendRecordToFile("./data/data.log");
+	});
 }
 
-Promise.map(fs.readdirSync('data'), function(dataFile){
-	console.info("Read measurements from %s file",dataFile);
-	db[dataFile] = datalogger.read("./data/" + dataFile);
+Promise.try(function(){
+	datalogger.readRecordsFromFile("./data/data.log");
 })
 .then(function(){
 		tempSensors;
@@ -104,10 +140,14 @@ Promise.map(fs.readdirSync('data'), function(dataFile){
 	setInterval(update, 10*60*1000);	
 });
 
+function initialize(electronic_meter) {
+	electronicMeter = electronic_meter;
+}
 
-
+module.exports.initialize = initialize;
 module.exports.getMeasurements = function(req){
-	chartConfig.data = db;
+	var chartConfig = JSON.parse(fs.readFileSync("./chartConfig.json"));
+	chartConfig.data = datalogger.getRecords();
 	return chartConfig;
 };
 

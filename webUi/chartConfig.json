@@ -1,59 +1,56 @@
 {
 	"charts": [
 		{
-			"title": "Veden kulutus",
-			"series": {
-				"1": {
-					"y": [
-						"water_m3"
-					],
-					"ylabel": "m3",
+			"title": "Sähkön kulutus",
+			"series": [
+				{
+					"yRef": ["electricityConsumption","change"],
+					"label": "kWh",
 					"valueRange": [
 						0,
 						null
 					]
-				}
-			},
-			"y": [
-				"data1",
-				"data3",
-				"data2"
-			],
-			"x": "time",
-			"xlabel": "time"
-		},
-		{
-			"title": "K2",
-			"series": {
-				"1": {
-					"y": [
-						"data1",
-						"data2"
-					],
-					"ylabel": "lämpötila",
-					"valueRange": [
-						-40,
-						50
-					]
 				},
-				"2": {
-					"y": [
-						"data3"
-					],
-					"ylabel": "sähkö",
+				{
+					"yRef": ["electricityConsumption","cumulative"],
+					"label": "kWh",
 					"valueRange": [
 						0,
-						300
-					]
+						null
+					],
+					"y2": true
 				}
-			},
-			"y": [
-				"data1",
-				"data3",
-				"data2"
 			],
-			"x": "data4",
-			"xlabel": "time"
+			"x": "time",
+			"xlabel": "time",
+			"ylabel": "Primary y-axis",
+            		"y2label": "Secondary y-axis"
+		},
+		{
+			"title": "Sähkön kulutus",
+			"series": [
+				{
+					"yRef": ["electricityConsumption","change"],
+					"label": "kWh",
+					"valueRange": [
+						0,
+						null
+					]
+				},
+				{
+					"yRef": ["temp_28-0000038e0b35","temperature"],
+					"label": "temp",
+					"valueRange": [
+						0,
+						null
+					],
+					"y2": true
+				}
+			],
+			"x": "time",
+			"xlabel": "time",
+			"ylabel": "Primary y-axis",
+            		"y2label": "Secondary y-axis"
 		}
 	]
 }

@@ -1,7 +1,9 @@
 <html>
 <head>
 <script type="text/javascript"
-src="http://dygraphs.com/1.1.1/dygraph-combined.js"></script>
+src="http://dygraphs.com/1.1.1/dygraph-dev.js"></script>
+<script src="synchronizer.js"></script>
+
 <script type="text/javascript" src="http://underscorejs.org/underscore.js"></script>
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 </head>
@@ -16,7 +18,7 @@ src="http://dygraphs.com/1.1.1/dygraph-combined.js"></script>
 	xmlhttp.onreadystatechange = function() {
 	if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
 			var myArr = JSON.parse(xmlhttp.responseText);
-	myFunction(myArr);
+			myFunction(myArr);
 	}
 	};
 
@@ -30,33 +32,32 @@ src="http://dygraphs.com/1.1.1/dygraph-combined.js"></script>
 	}
 
 	function appendDiv(name) {
-		var html = 	'<div id="' + name + '" style="width:800px; height:500px;"></div>';
+		var html = 	'<br></br><br></br><br></br><br></br><div id="' + name + '" style="width:800px; height:500px;"></div>';
 		$(".divCharts").append(html);
 	}
 
 	function myFunction(arr) {
+		function getDataValue(data, objName, valueName) {
+			var dataValue;
+			if(valueName===undefined) {
+				return data[objName];
+			}
+			try{	
+				var dataObj = data[objName];
+				dataValue = dataObj[valueName];
+			} catch(err) {
+				console.info("Value is not exist" + objName +":" + valueName)
+			}
+			return dataValue;
+		}
+		
 		var chartCnt = 0;
 		var charts = [];
 		arr.charts.forEach(function(chart){
-			var data = [];
-			var labels = [];
-			var series = _.values(chart.series);
+			var chartData = [];
+			var charLabels = [];
 			var divName = "chart" + chartCnt++;
 			
-			appendDiv(divName);
-		
-			arr.data[chart.x].forEach(function(x){
-				var tmp = [x[0]];
-				series.forEach(function(serie){
-					if(serie.y!==undefined) {
-						serie.y.forEach(function(y_name){
-							tmp.push(getSearch(arr.data[y_name], x[0]));
-						}) 
-					}
-				});
-				data.push(tmp);
-			});
-				
 			var params = {
 				title: chart.title,
 				labels: [],
@@ -66,54 +67,76 @@ src="http://dygraphs.com/1.1.1/dygraph-combined.js"></script>
 				axes: {
 					x: {
 						axisLabelFormatter: function(d, gran) {
-							try{
-								var d = new Date(arr.data[chart.x][d][1]*1000*60);
-								var weekday = ["Su","Ma","Ti","Ke","To","Pe","La"];
-								var month = ["tammi", "helmi", "maalis", "huhti", "touko", "kesä", "heinä", "elo", "syys", "loka", "marras", "joulu"];
-								
-								return d.getHours() + ":00 " + weekday[d.getDay()] + "\n"
-								       + d.getDate() + "." + month[d.getMonth()] + "\n" + d.getFullYear();
-							} catch(err) {
-								return "";
-							}
+							var d = new Date(d*1000*60);
+							return d;
 						}
 					}
 				},
-				showRangeSelector: true,
-				rangeSelectorHeight: 60
-			}
+				showRangeSelector: false,
+				rangeSelectorHeight: 60,
+				ylabel: chart.ylabel,
+				y2label: chart.y2label
+			}			
 			
-			params.labels.push(chart.xlabel);
-			
-			var seriesIndex = 1;
-			series.forEach(function(serie){
-				var axis = "y" + (seriesIndex===1?"":seriesIndex);
+			appendDiv(divName);
 
-				if(serie.y!==undefined) {
-						serie.y.forEach(function(y_name){
-							params.labels.push(y_name);
-							params.series[y_name] = {
-									"axis": axis
-							};	
-						})
-						params.axis[axis] = {
-							// set axis-related properties here
-							labelsKMB: true,
-							drawGrid: true,
-							independentTicks: true
-						}
-						if(params.axes[axis]===undefined) params.axes[axis] = {};
-						params.axes[axis].valueRange = serie.valueRange;
-						params[axis + "label"] = serie.ylabel;
-						params[axis + "AxisLabelWidth"] = 60;
-						seriesIndex++;
-					}
+				
+			var chartDataTmp = [];
+			arr.data.forEach(function(data){
+				
+				chartDataTmp.push(getDataValue(data, "time"));
+				
+				chart.series.forEach(function(serie){
+					var objName = serie.yRef[0];
+					var valueName = serie.yRef[1];
+					var dataValue = getDataValue(data, objName, valueName);
+					
+					chartDataTmp.push(dataValue);
+				});
+				chartData.push(chartDataTmp);
+				chartDataTmp=[];
 			});
+			
+			charLabels.push(chart.xlabel);	
+			chart.series.forEach(function(serie){
+				charLabels.push(serie.label);
+				if(serie.y2==true) {
+					params.series[serie.label] = {"axis": "y2"};	
+					params.axis.y2 = {
+						// set axis-related properties here
+						labelsKMB: true,
+						drawGrid: true,
+						independentTicks: true
+					}
+				}
+			});
+				
+			console.info(chartData);
+			console.info(charLabels);
+			
+			params.labels = charLabels;
+			
+
 			console.info(params);
 			g = new Dygraph(
-			document.getElementById(divName), data, params);
+			document.getElementById(divName), chartData, params);
 			charts.push(g);
 		});      
+	
+		var sync = Dygraph.synchronize(charts);
+      
+		  function update() {
+			var zoom = document.getElementById('chk-zoom').checked;
+			var selection = document.getElementById('chk-selection').checked;
+			sync.detach();
+			sync = Dygraph.synchronize(charts, {
+			  zoom: zoom,
+			  selection: selection
+			});
+		  }
+		  $('#chk-zoom, #chk-selection').change(update);
+	
+	
 	}
 </script>
 </body>

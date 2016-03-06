@@ -7,16 +7,13 @@ var fs = require('fs');
 var config = JSON.parse(fs.readFileSync("./config.json"));
 var setup = JSON.parse(fs.readFileSync("./setupfile.json"));
 var Promise = require('bluebird');
-var nexa = require('nexa');
+var nexa = require('./nexaandpowermeter');
 var ns = require('nested-structure');
 var toDot = require('to-dot');
 var monitoring = require('./monitoring.js');
 
 var server = express();
 server.use(express.static('./public'));
-
-//Tansmitter is connected to GPIO6
-nexa.nexaInit(setup.gpioPort);
 
 var controller_id = setup.controller_id;
 /*
@@ -40,6 +37,8 @@ console.set({
 /*server.listen(port, function() {
     console.log('server listening on port ' + port);
 });*/
+
+monitoring.initialize(nexa);
 
 var powerOffChangeDetected=false;
 
@@ -152,24 +151,15 @@ app.listen(setup.listenPort);
 function sendPortStatesToTarget(tryToSendCnt) {
 	return Promise.each(_.range(0,tryToSendCnt), function (){
 		return Promise.each(_.values(config.devices), function (device){
-			return new Promise(function (resolve, reject)  {
-					if(device.powerOn) {
-						if(device.dim>0) {
-							nexa.nexaDim(controller_id, device.id,device.dim, function() {
-								resolve();
-							});
-						} else {
-							nexa.nexaOn(controller_id, device.id, function() {
-
-								resolve();
-							});
-						}
-					} else {
-						nexa.nexaOff(controller_id, device.id, function() {
-							resolve();
-						});
-					}
-			});
+			if(device.powerOn) {
+				if(device.dim>0) {
+					return nexa.sendCmd("dim " + device.dim + " " + device.id);
+				} else {
+					return nexa.sendCmd("on " + device.id);
+				}
+			} else {
+				return nexa.sendCmd("off " + device.id);
+			}
 		}).catch(function (err){
 			console.error(err);
 		});

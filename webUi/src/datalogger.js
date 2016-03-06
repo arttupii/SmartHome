@@ -6,31 +6,55 @@ var Promise = require('bluebird');
 var exec = require('child_process').exec;
 var readline = require('readline');
 
+var record = {};
+var records = [];
 
-function append(dataFile, data) {
-	var tmp="";
-	
-	data.forEach(function(d){
-		tmp+=d+";";
-	});
-	
-	fs.appendFileSync(dataFile, tmp.substr(0,tmp.length-1)+"\n",'utf8');
+function updateRecord(objectName, valueName,value) {
+	if(record[objectName]===undefined) record[objectName] = {};
+	record[objectName][valueName] = value;
 }
 
-function read(dataFile) {
-	var file = fs.readFileSync(dataFile, 'utf8');
-
-	file = file.split("\n");
-	var ret = [];
-
-	file.forEach(function(line){
-		var s = line.split(";");
-		if(s.length>=2) {
-			ret.push(_.map(s,function(v){return parseFloat(v)}));
-		}
-	});
-	return ret;
+function readRecordsFromFile(dataFile) {
+	try{
+		var file = fs.readFileSync(dataFile, 'utf8');
+		
+		file = file.split("\n");
+		records = [];
+		
+		file.forEach(function(line){
+			if(line.length>3) {
+				records.push(JSON.parse(line));
+			}
+		});
+	} catch(err) {
+		console.error(err);
+	}
+	return records;
 }
 
-module.exports.append = append;
-module.exports.read = read;
+function appendRecordToFile(fileName) {
+	fs.appendFileSync(fileName, JSON.stringify(record)+"\n",'utf8');
+	records.push(JSON.parse(JSON.stringify(record)));
+}
+
+function newRecord(timetamp) {
+	record={"time":timetamp};
+}
+
+function getPrev(){
+	if(records.length>=1) {
+		return records[records.length-1];
+	}
+	return undefined;
+}
+
+function getRecords(){
+	return records;
+}
+
+module.exports.readRecordsFromFile = readRecordsFromFile;
+module.exports.updateRecord = updateRecord;
+module.exports.appendRecordToFile = appendRecordToFile;
+module.exports.newRecord = newRecord;
+module.exports.getPrev = getPrev;
+module.exports.getRecords = getRecords;
