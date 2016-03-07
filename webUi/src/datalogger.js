@@ -41,9 +41,9 @@ function newRecord(timetamp) {
 	record={"time":timetamp};
 }
 
-function getPrev(){
-	if(records.length>=1) {
-		return records[records.length-1];
+function getPrev(name){
+	for(var i=records.length-1;i>=0;i--)	{
+		if(records[i][name]!==undefined) return records[i];
 	}
 	return undefined;
 }
