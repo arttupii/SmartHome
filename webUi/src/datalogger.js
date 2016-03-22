@@ -52,6 +52,20 @@ function getRecords(){
 	return records;
 }
 
+function mod() {
+	appendRecordToFile("data/data.log");
+	
+	var tmp = "";
+	records.forEach(function(r){
+		if(r.waterConsumption!==undefined) {
+			delete r.waterConsumption;
+		}		
+		tmp+=JSON.stringify(r)+"\n";
+	});
+
+	fs.writeFileSync("data/data.log", tmp,'utf8');	
+}
+//mod() 
 module.exports.readRecordsFromFile = readRecordsFromFile;
 module.exports.updateRecord = updateRecord;
 module.exports.appendRecordToFile = appendRecordToFile;

@@ -15,13 +15,14 @@
                     "sa": false,
                     "su": false
                 },
-                "timeOn": "06:00",
+                "timeOn": "07:00",
                 "timeOff": "09:00"
             },
             "id": 0,
             "statusInfo": {
-                "offTime": "2016-01-25T18:02:41.640Z",
-                "onTime": "2016-01-25T18:02:40.186Z"
+                "offTime": "2016-03-22T07:00:00.497Z",
+                "onTime": "2016-03-22T05:00:00.161Z",
+                "lastEventReason": "timer"
             }
         },
         "1": {
@@ -44,8 +45,8 @@
                 }
             },
             "statusInfo": {
-                "onTime": "2016-01-25T18:07:27.336Z",
-                "offTime": "2016-01-25T18:07:33.847Z",
+                "onTime": "2016-03-22T10:01:15.600Z",
+                "offTime": "2016-03-22T10:01:18.136Z",
                 "lastEventReason": "user"
             }
         },
@@ -69,8 +70,8 @@
                 }
             },
             "statusInfo": {
-                "onTime": "2016-01-25T18:20:10.748Z",
-                "offTime": "2016-01-25T18:21:11.074Z",
+                "onTime": "2016-01-26T15:18:42.960Z",
+                "offTime": "2016-01-26T15:19:43.542Z",
                 "lastEventReason": "user"
             }
         },
@@ -94,8 +95,8 @@
                 }
             },
             "statusInfo": {
-                "offTime": "2016-01-25T18:17:56.913Z",
-                "onTime": "2016-01-25T18:17:56.717Z",
+                "offTime": "2016-03-06T09:40:12.585Z",
+                "onTime": "2016-03-06T09:40:09.545Z",
                 "lastEventReason": "user"
             }
         }

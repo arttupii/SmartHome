@@ -4,9 +4,10 @@ var fs = require('fs');
 var setup = JSON.parse(fs.readFileSync("./setupfile.json"));
 var serialport = require("serialport");
 var SerialPort = serialport.SerialPort
+var usbSPath = require('./usbSerialAbsolutPath');
 
 setup.nexaSerialPort.config.parser = serialport.parsers.readline("\n");
-var sp = new SerialPort(setup.nexaSerialPort.port, setup.nexaSerialPort.config);
+var sp = new SerialPort(usbSPath.getSerialPort(setup.nexaSerialPort.port), setup.nexaSerialPort.config);
 
 var resolvePromise;
 sp.on('data', function(data) {
@@ -26,7 +27,7 @@ function trigNewJob(){
 		if(jobs.length>0){
 			var job = jobs.pop();
 			resolvePromise = job[0];
-			job[2].timeout(3000)
+			job[2].timeout(10000)
 			.catch(Promise.TimeoutError, function(e) {resolvePromise
 				resolvePromise('{"status":"timeout"}');
 				resolvePromise=undefined;

@@ -1,7 +1,7 @@
 {
 	"charts": [
 		{
-			"title": "Sähkön kulutus",
+			"title": "Sähkö",
 			"series": [
 				{
 					"yRef": ["electricityConsumption","change"],
@@ -13,7 +13,7 @@
 				},
 				{
 					"yRef": ["electricityConsumption","cumulative"],
-					"label": "kWh",
+					"label": "kWh(c)",
 					"valueRange": [
 						0,
 						null
@@ -27,19 +27,19 @@
             		"y2label": "Secondary y-axis"
 		},
 		{
-			"title": "Sähkön kulutus",
+			"title": "Vesi",
 			"series": [
 				{
-					"yRef": ["electricityConsumption","change"],
-					"label": "kWh",
+					"yRef": ["waterConsumption","change"],
+					"label": "m3",
 					"valueRange": [
 						0,
 						null
 					]
 				},
 				{
-					"yRef": ["temp_28-0000038e0b35","temperature"],
-					"label": "temp",
+					"yRef": ["waterConsumption","cumulative"],
+					"label": "m3(c)",
 					"valueRange": [
 						0,
 						null

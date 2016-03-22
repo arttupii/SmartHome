@@ -7,7 +7,7 @@ var exec = require('child_process').exec;
 var datalogger = require('./datalogger.js');
 var watermeter = require('./watermeter.js');
 var emeter = require('./electricitymeter.js');
-
+var kamstrup = require('./kamstrup');
 var ds18b20 = require('ds18b20');
 
 var tempSensors = [];
@@ -27,7 +27,7 @@ function update(){
 	
 	console.info("Read measurements, timetamp=%d",timetamp);
 	
-	return watermeter.read()
+	return watermeter.read().delay(5000)
 	.then(function(value){
 		if(value!==undefined) {
 			datalogger.updateRecord("waterConsumption", "change", value.change);
@@ -41,6 +41,8 @@ function update(){
 			console.info("Temperature %s ---> %sC", id, temp);
 			
 			datalogger.updateRecord("temp_" + id, "temperature", temp);
+		}).catch(function(err){
+				console.error("ERROR: " + err );
 		});
 	})
 	.then(function() {
@@ -53,6 +55,14 @@ function update(){
 		})
 	})
 	.then(function(){
+		var json = kamstrup.getData();
+		if(json!==undefined && json.energy!==undefined) {
+			_.keys(json).forEach(function(key){
+				datalogger.updateRecord("kamstrup", key, json[key]);	
+			});
+		}	
+	})
+	.then(function(){
 		datalogger.appendRecordToFile("./data/data.log");
 	});
 }
@@ -63,7 +73,6 @@ Promise.try(function(){
 	watermeter.initialize(datalogger.getPrev("waterConsumption"));	
 })
 .then(function(){
-		tempSensors;
 		return new Promise(function(resolve){
 			ds18b20.sensors(function(err, ids) {
 			  // got sensor IDs ...

@@ -5,7 +5,6 @@ var setup = JSON.parse(fs.readFileSync("./setupfile.json"));
 var Promise = require('bluebird');
 var exec = require('child_process').exec;
 
-
 var revRecord;
 
 var electricity = {
