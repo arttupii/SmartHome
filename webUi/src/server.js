@@ -114,7 +114,7 @@ app.ws('/websocket', function(ws, req) {
 });
 
 
-var aWss = expressWs.getWss('/websocket/');
+var aWss = expressWs.getWss('/websocket');
 
 function sendToClient(client, msg) {
 	try{
