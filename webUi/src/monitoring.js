@@ -18,50 +18,62 @@ var electronicMeter;
 
 var data = {};
 
-
+function updateRecordJson(objName, json){
+	if(json!==undefined) {
+		_.keys(json).forEach(function(key){
+			datalogger.updateRecord(objName, key, json[key]);	
+		});
+	}
+}
 function update(){
-	var timetamp = parseInt(new Date().getTime()/1000/60); //minutes since 1970
+	var timetamp = new Date().getTime(); //minutes since 1970
 	var index = 0;
 
 	datalogger.newRecord(timetamp);
 	
 	console.info("Read measurements, timetamp=%d",timetamp);
 	
-	return watermeter.read().delay(5000)
-	.then(function(value){
-		if(value!==undefined) {
-			datalogger.updateRecord("waterConsumption", "change", value.change);
-			datalogger.updateRecord("waterConsumption", "cumulative", value.cumulative);
-		}
-	})
-	.then(function(){
-		//read temperature sensors
-		return Promise.each(tempSensors, function(id){
-			var temp = ds18b20.temperatureSync(id);
-			console.info("Temperature %s ---> %sC", id, temp);
-			
-			datalogger.updateRecord("temp_" + id, "temperature", temp);
-		}).catch(function(err){
-				console.error("ERROR: " + err );
+	function readWater() {	
+		return watermeter.read()//.delay(5000)
+		.then(function(value){
+			/*if(value!==undefined) {
+				datalogger.updateRecord("waterMeter", "change", value.change);
+				datalogger.updateRecord("waterMeter", "cumulative", value.cumulative);
+			}*/
 		});
-	})
-	.then(function() {
+	}
+
+	function readDS1820() {
+		//read temperature sensors
+		return Promise.map(tempSensors, function(id){
+			return new Promise(function(resolve) {
+				var temp = ds18b20.temperature(id, function(err, value) {
+					console.info("Temperature %s ---> %sC", id, value);
+					datalogger.updateRecord("ds1820", id, value);
+					resolve();
+				});
+			});
+		}).catch(function(err){
+			console.error("ERROR: " + err );
+		});
+	}
+
+	
+	function readElectricityMeter() {
 		return emeter.read(electronicMeter)
 		.then(function(data){
 			if(data!==undefined) {
-				datalogger.updateRecord("electricityConsumption", "change", data.change);
-				datalogger.updateRecord("electricityConsumption", "cumulative", data.cumulative);
+				updateRecordJson("electricityMeter", data);
 			}
-		})
-	})
-	.then(function(){
+		});
+	}
+
+	function readKamstrup() {
 		var json = kamstrup.getData();
-		if(json!==undefined && json.energy!==undefined) {
-			_.keys(json).forEach(function(key){
-				datalogger.updateRecord("kamstrup", key, json[key]);	
-			});
-		}	
-	})
+		updateRecordJson("kamstrup", json);
+	}
+
+	return Promise.all([readWater(), readDS1820(), readElectricityMeter(), readKamstrup()])
 	.then(function(){
 		datalogger.appendRecordToFile("./data/data.log");
 	});
@@ -69,22 +81,23 @@ function update(){
 
 Promise.try(function(){
 	datalogger.readRecordsFromFile("./data/data.log");
-	emeter.initialize(datalogger.getPrev("electricityConsumption"));
-	watermeter.initialize(datalogger.getPrev("waterConsumption"));	
+	emeter.initialize(datalogger.getPrev("electricityMeter"));
+	watermeter.initialize(datalogger.getPrev("waterMeter"));	
 })
 .then(function(){
-		return new Promise(function(resolve){
-			ds18b20.sensors(function(err, ids) {
-			  // got sensor IDs ...
-			  tempSensors = ids;
-			  console.info("Detected temperature sensors: %s", JSON.stringify(ids))
-			  resolve();
-			});
+	return new Promise(function(resolve){
+		ds18b20.sensors(function(err, ids) {
+		  // got sensor IDs ...
+		  tempSensors = ids;
+		  console.info("Detected temperature sensors: %s", JSON.stringify(ids))
+		  resolve();
 		});
+	});
 })
+.delay(10000)
 .then(function(){
 	update();
-	setInterval(update, 10*60*1000);	
+	setInterval(update, setup.emoncms.updateFrequency);	
 });
 
 function initialize(electronic_meter) {
@@ -92,9 +105,4 @@ function initialize(electronic_meter) {
 }
 
 module.exports.initialize = initialize;
-module.exports.getMeasurements = function(req){
-	var chartConfig = JSON.parse(fs.readFileSync("./chartConfig.json"));
-	chartConfig.data = datalogger.getRecords();
-	return chartConfig;
-};
 

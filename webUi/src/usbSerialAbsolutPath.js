@@ -10,7 +10,7 @@ function runCmd(cmd) {
 }
 
 
-function getSerialPort(pathFind) {
+function getSerialPort(pathFind, info) {
 	var retValue;
 	runCmd("ls -l /sys/bus/usb-serial/devices/").split("\n")
 	.forEach(function(line){
@@ -28,7 +28,7 @@ function getSerialPort(pathFind) {
 		}
 	});
 
-	console.info("pathFind=%s --> usbDevice=%s", pathFind, retValue);
+	console.info("pathFind=%s --> usbDevice=%s", pathFind, retValue, info);
 	return retValue;
 }
 

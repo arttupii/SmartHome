@@ -43,6 +43,12 @@ emonTX V2 Temperature and power pulse + Read of Kamstrup Multical 601 Heat meter
 //********************************************Kamstrup Stuff Start********************************************
 #include <SoftwareSerial.h>
 
+float kamReadReg(unsigned short kreg);
+void kamSend(byte const *msg, int msgsize);
+float kamDecode(unsigned short const kreg, byte const *msg);
+unsigned short kamReceive(byte recvmsg[]);
+long crc_1021(byte const *inmsg, unsigned int len);
+
 //Kamstrup setup
 // Kamstrup Multical 601
 word const kregnums[] = {
@@ -99,7 +105,7 @@ int ppwh = 10;                                                                  
 // Kamstrup optical IR serial
 
 #define KAMTIMEOUT 2000                                                                                                         // Kamstrup timeout after transmit
-#define POLLINTERVAL 30000                                                                                                      // Polling interval  <<<<<<<<<<<<<<<<<< This one both controls when to poll heat meter and when to send data to EmonBase/CMS
+#define POLLINTERVAL 15000                                                                                                      // Polling interval  <<<<<<<<<<<<<<<<<< This one both controls when to poll heat meter and when to send data to EmonBase/CMS
 
 unsigned long timerMicros;
 

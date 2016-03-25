@@ -11,7 +11,7 @@ var usbSPath = require('./usbSerialAbsolutPath');
 var serialSetup = setup.kamstrupSerialPort;
 
 serialSetup.config.parser = serialport.parsers.readline("\n");
-var sp = new SerialPort(usbSPath.getSerialPort(serialSetup.port), serialSetup.config);
+var sp = new SerialPort(usbSPath.getSerialPort(serialSetup.port, "kamstrup"), serialSetup.config);
 
 var json;
 
@@ -19,6 +19,7 @@ var resolvePromise;
 sp.on('data', function(data) {
 	try{
 		json = JSON.parse(data);
+		console.info("kamstrup: " + data);
 	} catch(err){
 		console.error("kamstrup " + err);
 	}

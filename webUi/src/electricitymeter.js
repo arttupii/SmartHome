@@ -7,33 +7,26 @@ var exec = require('child_process').exec;
 
 var revRecord;
 
-var electricity = {
-	"previusHelper":undefined,
-	"consumptionCumulative":undefined
-};
+var fixCounter;
+
 
 function read(electronicMeter)	{
 	return electronicMeter.sendCmd("data")
 	.then(function(data){
-		if(data.kWh!==undefined) {
-			if(electricity.consumptionCumulative===undefined || electricity.previusHelper==undefined) {
-				electricity.previusHelper=data.kWh;
-				
+		if(data.counter!==undefined) {
+			if(fixCounter===undefined) {
 				try{
-					electricity.consumptionCumulative = revRecord.electricityConsumption.cumulative;
+					fixCounter = revRecord.electricityConsumption.counter;
 				} catch(err) {
 					console.info("Trying read fore previus electricityConsumption %s", err);
-					electricity.consumptionCumulative = 0;
+					fixCounter = 0;
 				}
+				if(fixCounter===undefined) fixCounter = 0;
 			}
-			var change = data.kWh-electricity.previusHelper;
-			electricity.previusHelper = data.kWh;
-
-			electricity.consumptionCumulative += change; 
 			
-			console.info("electricity usage cumulative is %skWh, change=%skWh, measured=%s", electricity.consumptionCumulative, change, data.kWh);
+			console.info("electricity --> fixCounter:%s, counter=%s, pulseLength:%s", fixCounter, data.counter, data.pulseLength);
 	
-			return {"change":change, "cumulative": electricity.consumptionCumulative};
+			return {"kWh": (1/10000)*(data.counter + fixCounter), "counter": (data.counter + fixCounter), "pulseLength": data.pulseLength, "watt": data.pulseLength/1000};
 		} else {
 			console.info("error during read electricity_consumption " + JSON.stringify(data));
 		}

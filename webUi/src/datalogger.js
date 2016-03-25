@@ -9,6 +9,8 @@ var readline = require('readline');
 var record = {};
 var records = [];
 
+var superagent = require('superagent');
+
 function updateRecord(objectName, valueName,value) {
 	if(record[objectName]===undefined) record[objectName] = {};
 	record[objectName][valueName] = value;
@@ -33,7 +35,34 @@ function readRecordsFromFile(dataFile) {
 }
 
 function appendRecordToFile(fileName) {
+	console.info("Update " + fileName + " file");
 	fs.appendFileSync(fileName, JSON.stringify(record)+"\n",'utf8');
+
+	var restApiObjects = {};
+	_.keys(record).forEach(function(devName){
+		var devObj = record[devName];
+		_.keys(devObj).forEach(function(valueName) {
+			var value = devObj[valueName];
+			
+			if(restApiObjects[devName] === undefined) restApiObjects[devName] = {};
+
+			restApiObjects[devName][valueName] = value;
+		});
+	});
+	//console.info(JSON.stringify(restApiObjects, null, 3));
+
+	_.keys(restApiObjects).forEach(function(name){
+		var restApiObject = restApiObjects[name];
+		var apiRequest = setup.emoncms.server + '/input/post.json?node=' + name + '&json=' + JSON.stringify(restApiObject) + '&apikey=' + setup.emoncms.apikey;
+		console.info(apiRequest);
+
+		superagent.get(apiRequest)
+		.end(function(err, res){
+			console.info("\n\n" + res); 
+		});
+
+	});
+
 	records.push(JSON.parse(JSON.stringify(record)));
 }
 

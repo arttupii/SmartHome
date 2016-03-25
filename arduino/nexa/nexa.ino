@@ -9,7 +9,8 @@ const char *statusOk = "{\"status\":\"ok\"}";
 const char *statusNOK = "{\"status\":\"nok\"}";
 
 int nexaPin = 3;
-int imp_kWh = 10000;
+
+unsigned long pulseLength = 0;
 
 NexaCtrl nexa(nexaPin);
 
@@ -91,48 +92,117 @@ const char * setDeviceAsDim(const char *str) {
   return statusOk;  
 }
 
-const char * pairing(const char *str) {
+const char * pair(const char *str) {
   char command[10];
   int device;
   sscanf (str,"%s %d",command,&device);
-  long tick = millis() + 5000;
 
-  while(millis()<tick) {
+  for(int i=0;i<20;i++) {
     nexa.DeviceOn(controller_id, device);
   }
 
   return statusOk;  
 }
 
-const char * getPowerConsumption() {
+const char * unpair(const char *str) {
+  char command[10];
+  int device;
+  sscanf (str,"%s %d",command,&device);
+
+  for(int i=0;i<20;i++){
+    nexa.DeviceOff(controller_id, device);
+  }
+
+  return statusOk;  
+}
+
+char *strrev2(char *str){
+    char c, *front, *back;
+
+    if(!str || !*str)
+        return str;
+    for(front=str,back=str+strlen(str)-1;front < back;front++,back--){
+        c=*front;*front=*back;*back=c;
+    }
+    return str;
+}
+
+
+void longToStr(char *b, int size, unsigned long long v) {
+  memset(b,0,size);
+  b[0]='0';
+  int i=0;
+  while(v!=0){
+    char num = (v%10) + '0';
+    b[i]=num;
+    v/=10;
+    i++;
+    if(i>=size-1) {
+	break;
+    }
+  }
+  b = strrev2(b);
+
+  while(b[0]=='0') {
+    memcpy(b,&b[1],size);
+  }
+  if(b[0]==0) {
+   b[0]='0';
+   b[1]=0;
+  }
+}
+void calculateWatt();
+void getPowerConsumption() {
   unsigned long long t = getAndUpdateCounter();
 
   char text[50];
-  memset(text,0,sizeof(text));
-  text[0]='0';
+  
+  calculateWatt();
 
-  int i = 0;	
-  for(int l=0;l<16;l++) {
-    char num = (t%10) + '0';
-    text[i]=num;
-    t/=10;
-    i++;
-    if(i==digCount(imp_kWh)) {
-      text[i]='.';
-      i++;
-    }
-  }
-  strrev(text);
+  longToStr(text, sizeof(text), t);
 
-  while(text[0]=='0' && text[1]!='.') {
-    memcpy(text,&text[1],sizeof(text));
-  }
+  Serial.print("{\"counter\":");
+  Serial.print(text);
+  Serial.print(",");
 
-  static char ret[100];
-  sprintf(ret,"{\"kWh\":%s,\"status\":\"ok\"}", text);
-
-  return ret;  
+  longToStr(text, sizeof(text), pulseLength);
+  Serial.print("\"pulseLength\":");
+  Serial.print(text);
+  Serial.println(",\"status\":\"ok\"}"); 
 }
+
+unsigned long timerMicros;
+
+void resetMicros() {
+  timerMicros = micros();
+}
+
+unsigned long getMicros() {
+  unsigned long t = micros();
+  
+  if (t >= timerMicros)  {
+    return t - timerMicros;
+  } else {
+    return t + 0xffffffff - timerMicros;
+  }
+}
+
+void calculateWatt() {
+  static char startC = 1;
+  static unsigned long long m0;
+
+  if(startC==1) {
+     m0 = getAndUpdateCounter();
+     startC=2;
+     resetMicros();
+  } else {
+     unsigned long t = getMicros();
+     unsigned long long m1 = getAndUpdateCounter();
+     pulseLength = t/(m1-m0);
+     startC=1;
+  }
+}
+
 
 static String str;
 void loop()
@@ -150,11 +220,14 @@ void loop()
     else if(str.indexOf("dim ")==0) {
       Serial.println(setDeviceAsSwitch(str.c_str()));
     } 
-    else if(str.indexOf("pairing ")==0) {
-      Serial.println(pairing(str.c_str()));
+    else if(str.indexOf("pair ")==0) {
+      Serial.println(pair(str.c_str()));
+    } 
+    else if(str.indexOf("unpair ")==0) {
+      Serial.println(unpair(str.c_str()));
     } 
     else if(str.indexOf("data")==0) {
-      Serial.println(getPowerConsumption());
+      getPowerConsumption();
     } 
     else {
       Serial.println(statusNOK);

@@ -42,6 +42,7 @@ monitoring.initialize(nexa);
 
 var powerOffChangeDetected=false;
 
+/*
 // Authenticator
 app.use(function(req, res, next) {
     var auth;
@@ -64,13 +65,12 @@ app.use(function(req, res, next) {
         next();
     }
 });
+*/
 
 app.use(express.static('./public'));
-app.get('/data', function (req,res) {
-   res.send(monitoring.getMeasurements());
-});
 
-app.ws('/', function(ws, req) {
+
+app.ws('/websocket', function(ws, req) {
 	ws.on('message', function(msg) {
 		console.log("Message " + msg);
 		msg = JSON.parse(msg);
@@ -103,22 +103,18 @@ app.ws('/', function(ws, req) {
 			var deviceID = msg.data.device;
 			if(pair==="pair") {
 				console.info("Pairing request: deviceId = " + deviceID);
-				nexa.nexaPairing(controller_id, deviceID, function(){
-					sendToClient(ws,createMsg("pair", "pair done"));
-				});
+				return nexa.sendCmd("pair " + deviceID);
 			}
 			if(pair==="unpair") {
 				console.info("Unpairing request: deviceId = " + deviceID);
-				nexa.nexaUnpairing(controller_id, deviceID, function(){
-					sendToClient(ws,createMsg("pair", "unpair done"))
-				});
+				return nexa.sendCmd("unpair " + deviceID);
 			}
 		}
 	});
 });
 
 
-var aWss = expressWs.getWss('/');
+var aWss = expressWs.getWss('/websocket/');
 
 function sendToClient(client, msg) {
 	try{

@@ -20,8 +20,8 @@
             },
             "id": 0,
             "statusInfo": {
-                "offTime": "2016-03-22T07:00:00.497Z",
-                "onTime": "2016-03-22T05:00:00.161Z",
+                "offTime": "2016-03-23T09:00:00.870Z",
+                "onTime": "2016-03-23T08:54:09.918Z",
                 "lastEventReason": "timer"
             }
         },
@@ -45,8 +45,8 @@
                 }
             },
             "statusInfo": {
-                "onTime": "2016-03-22T10:01:15.600Z",
-                "offTime": "2016-03-22T10:01:18.136Z",
+                "onTime": "2016-03-23T10:27:21.092Z",
+                "offTime": "2016-03-23T10:27:25.257Z",
                 "lastEventReason": "user"
             }
         },
@@ -95,8 +95,8 @@
                 }
             },
             "statusInfo": {
-                "offTime": "2016-03-06T09:40:12.585Z",
-                "onTime": "2016-03-06T09:40:09.545Z",
+                "offTime": "2016-03-23T11:06:14.562Z",
+                "onTime": "2016-03-23T11:06:12.992Z",
                 "lastEventReason": "user"
             }
         }

@@ -7,11 +7,11 @@ var SerialPort = serialport.SerialPort
 var usbSPath = require('./usbSerialAbsolutPath');
 
 setup.nexaSerialPort.config.parser = serialport.parsers.readline("\n");
-var sp = new SerialPort(usbSPath.getSerialPort(setup.nexaSerialPort.port), setup.nexaSerialPort.config);
+var sp = new SerialPort(usbSPath.getSerialPort(setup.nexaSerialPort.port, "NEXA"), setup.nexaSerialPort.config);
 
 var resolvePromise;
 sp.on('data', function(data) {
-  //console.log('data received: ' + data);
+  console.log('data received: ' + data);
   if(resolvePromise!==undefined) {
 	  resolvePromise(data);
 	  resolvePromise=undefined;
