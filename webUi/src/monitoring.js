@@ -8,13 +8,10 @@ var datalogger = require('./datalogger.js');
 var watermeter = require('./watermeter.js');
 var emeter = require('./electricitymeter.js');
 var kamstrup = require('./kamstrup');
-var ds18b20 = require('ds18b20');
+var ds1820 = require('./ds1820');
 
 var tempSensors = [];
 var electronicMeter;
-
-
-
 
 var data = {};
 
@@ -44,17 +41,8 @@ function update(){
 
 	function readDS1820() {
 		//read temperature sensors
-		return Promise.map(tempSensors, function(id){
-			return new Promise(function(resolve) {
-				var temp = ds18b20.temperature(id, function(err, value) {
-					console.info("Temperature %s ---> %sC", id, value);
-					datalogger.updateRecord("ds1820", id, value);
-					resolve();
-				});
-			});
-		}).catch(function(err){
-			console.error("ERROR: " + err );
-		});
+		var json = ds1820.getData();
+		updateRecordJson("ds1820", json);
 	}
 
 	
@@ -82,16 +70,6 @@ Promise.try(function(){
 	datalogger.readRecordsFromFile("./data/data.log");
 	emeter.initialize(datalogger.getPrev("electricityMeter"));
 	watermeter.initialize(datalogger.getPrev("waterMeter"));	
-})
-.then(function(){
-	return new Promise(function(resolve){
-		ds18b20.sensors(function(err, ids) {
-		  // got sensor IDs ...
-		  tempSensors = ids;
-		  console.info("Detected temperature sensors: %s", JSON.stringify(ids))
-		  resolve();
-		});
-	});
 })
 .delay(10000)
 .then(function(){

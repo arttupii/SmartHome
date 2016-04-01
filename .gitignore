@@ -1,3 +1,4 @@
 arduino/kamstrup/build*
 arduino/nexa/build*
 webUi/node_modules
+arduino/ds1820/build*

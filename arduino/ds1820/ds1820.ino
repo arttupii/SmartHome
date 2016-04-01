@@ -8,7 +8,7 @@ Json json;
 OneWire  ds(10);  // on pin 10
 DallasTemperature sensors(&ds);
 
-#define TEMPERATURE_PRECISION 9
+#define TEMPERATURE_PRECISION 12
 
 void setup(void)
 {
