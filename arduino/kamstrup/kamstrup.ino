@@ -43,9 +43,9 @@ emonTX V2 Temperature and power pulse + Read of Kamstrup Multical 601 Heat meter
 //********************************************Kamstrup Stuff Start********************************************
 #include <SoftwareSerial.h>
 
-float kamReadReg(unsigned short kreg);
+double kamReadReg(unsigned short kreg);
 void kamSend(byte const *msg, int msgsize);
-float kamDecode(unsigned short const kreg, byte const *msg);
+double kamDecode(unsigned short const kreg, byte const *msg);
 unsigned short kamReceive(byte recvmsg[]);
 long crc_1021(byte const *inmsg, unsigned int len);
 
@@ -79,13 +79,13 @@ const int UNO = 1;                                                              
 typedef struct {
   //********************************************Kamstrup Stuff Start********************************************
 
-  float Energy;
-  float CurrentPower;
-  float TemperatureT1;
-  float TemperatureT2;
-  float TemperatureDiff;
-  float Flow;
-  float Volumen1;
+  double Energy;
+  double CurrentPower;
+  double TemperatureT1;
+  double TemperatureT2;
+  double TemperatureDiff;
+  double Flow;
+  double Volumen1;
 
   //********************************************Kamstrup Stuff End ********************************************
 
@@ -269,6 +269,39 @@ void setup() {
   //********************************************Kamstrup Stuff End********************************************
 }
 
+void printDouble( double val, byte precision){
+ // prints val with number of decimal places determine by precision
+ // precision is a number from 0 to 6 indicating the desired decimial places
+ // example: lcdPrintDouble( 3.1415, 2); // prints 3.14 (two decimal places)
+
+ if(val < 0.0){
+   Serial.print('-');
+   val = -val;
+ }
+
+ Serial.print (int(val));  //prints the int part
+ if( precision > 0) {
+   Serial.print("."); // print the decimal point
+   unsigned long frac;
+   unsigned long mult = 1;
+   byte padding = precision -1;
+   while(precision--)
+ mult *=10;
+
+   if(val >= 0)
+frac = (val - int(val)) * mult;
+   else
+frac = (int(val)- val ) * mult;
+   unsigned long frac1 = frac;
+   while( frac1 /= 10 )
+padding--;
+   while(  padding--)
+Serial.print("0");
+   Serial.print(frac,DEC) ;
+ }
+}
+
+
 void loop()
 {
 
@@ -284,31 +317,31 @@ void loop()
   //********************************************Kamstrup Stuff End********************************************
   Serial.print("{");
   Serial.print("\"energy\":");
-  Serial.print(emontx.Energy);
+  printDouble(emontx.Energy,5);
   Serial.print(", ");
 
   Serial.print("\"currentPower\": ");
-  Serial.print(emontx.CurrentPower);
+  printDouble(emontx.CurrentPower,2);
   Serial.print(", ");
 
   Serial.print("\"temperatureT1\": ");
-  Serial.print(emontx.TemperatureT1);
+  printDouble(emontx.TemperatureT1,3);
   Serial.print(", ");
 
   Serial.print("\"temperatureT2\": ");
-  Serial.print(emontx.TemperatureT2);
+  printDouble(emontx.TemperatureT2,3);
   Serial.print(", ");
 
   Serial.print("\"temperatureDiff\": ");
-  Serial.print(emontx.TemperatureDiff);
+  printDouble(emontx.TemperatureDiff,3);
   Serial.print(", ");
 
   Serial.print("\"flow\": ");
-  Serial.print(emontx.Flow);
+  printDouble(emontx.Flow,3);
   Serial.print(", ");
 
   Serial.print("\"volumen1\": ");
-  Serial.print(emontx.Volumen1);
+  printDouble(emontx.Volumen1,3);
   Serial.println("}");
 
   delay(POLLINTERVAL);
@@ -319,10 +352,10 @@ void loop()
 
 #define KAM_BUFFER_SIZE 100
 // kamReadReg - read a Kamstrup register
-float kamReadReg(unsigned short kreg) {
+double kamReadReg(unsigned short kreg) {
 
   byte recvmsg[KAM_BUFFER_SIZE];                                                                                                            // buffer of bytes to hold the received data
-  float rval;                                                                                                                  // this will hold the final value
+  double rval;                                                                                                                  // this will hold the final value
 
   // prepare message to send and send it
   byte sendmsg[] = {
@@ -471,7 +504,7 @@ unsigned short kamReceive(byte recvmsg[]) {
 }
 
 // kamDecode - decodes received data
-float kamDecode(unsigned short const kreg, byte const *msg) {
+double kamDecode(unsigned short const kreg, byte const *msg) {
 
   // skip if message is not valid
   if (msg[0] != 0x3f or msg[1] != 0x10) {
@@ -493,13 +526,13 @@ float kamDecode(unsigned short const kreg, byte const *msg) {
   if (msg[6] & 0x40) {
     i = -i;
   };
-  float ifl = pow(10, i);
+  double ifl = pow(10, i);
   if (msg[6] & 0x80) {
     ifl = -ifl;
   }
 
   // return final value
-  return (float )(x * ifl);
+  return (double )(x * ifl);
 
 }
 

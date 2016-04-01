@@ -36,10 +36,9 @@ function update(){
 	function readWater() {	
 		return watermeter.read()//.delay(5000)
 		.then(function(value){
-			/*if(value!==undefined) {
-				datalogger.updateRecord("waterMeter", "change", value.change);
-				datalogger.updateRecord("waterMeter", "cumulative", value.cumulative);
-			}*/
+			if(value!==undefined) {
+				updateRecordJson("waterMeter", value);
+			}
 		});
 	}
 

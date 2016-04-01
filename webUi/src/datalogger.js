@@ -50,6 +50,7 @@ function appendRecordToFile(fileName) {
 		});
 	});
 	//console.info(JSON.stringify(restApiObjects, null, 3));
+	superagent.parse = function(){};
 
 	_.keys(restApiObjects).forEach(function(name){
 		var restApiObject = restApiObjects[name];
@@ -58,7 +59,7 @@ function appendRecordToFile(fileName) {
 
 		superagent.get(apiRequest)
 		.end(function(err, res){
-			console.info("\n\n" + res); 
+			console.info("\n\n" + res + err); 
 		});
 
 	});
@@ -72,7 +73,7 @@ function newRecord(timetamp) {
 
 function getPrev(name){
 	for(var i=records.length-1;i>=0;i--)	{
-		if(records[i][name]!==undefined) return records[i];
+		if(records[i][name]!==undefined) return records[i][name];
 	}
 	return undefined;
 }

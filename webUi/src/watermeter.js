@@ -6,11 +6,18 @@ var Promise = require('bluebird');
 var exec = require('child_process').exec;
 var revRecord;
 
-var water = {
-	"previusHelper":undefined,
-	"consumptionCumulative":undefined
-}
 
+var timeHelper;
+function getTimeChange() {
+	var ret = 0;
+	var now = new Date().getTime()
+	if(timeHelper!==undefined){	
+		ret = now - timeHelper;	
+	} 
+	timeHelper = now;
+		
+	return ret;
+}
 
 function runCmd(cmd) {
 	return new Promise(function(resolve, reject){
@@ -23,70 +30,85 @@ function runCmd(cmd) {
 	});
 }
 
-function read(c){
-	return Promise.resolve();
-	
-	function tryToGetPicture() {
-		var succeed = false;
+function update(){
+	updateThread()
+	.delay(10000)
+	.then(function(){
+		return updateThread();
+	})
+	.then(function(){
+		update();
+	});
+}
+update();
+
+
+var l;
+
+var updated = false;
+
+var prevM;
+function calculateConsumption(m) {
+		console.info("calculateConsumption, water --> ",m);
+		if(prevM===undefined) {
+			prevM = m;
+		}
 		
-		var tryToGetPromise = Promise.each(_.range(0,10), function() {
-			if(succeed) return;
-			return runCmd('sh ./src/ocrwater1.sh')
-			.then(function(difference) {
-				difference = parseFloat(difference.split(" ")[0]);
-				if(difference<4000) {
-					console.info("Picture succeed " + difference);
-					succeed = true;
-				} else {
-					console.info("Picture failed " + difference);
-				}
-			});
-		})
-		return tryToGetPromise;
-	}
-/*	
-	return tryToGetPicture()
+		function calculate() {
+			var tmp = l;
+			if(prevM<=m){
+				tmp += m-prevM;		
+			} else {
+				tmp += m + (999.9-prevM)
+			}
+			return tmp;
+		}
+		
+		var ret = calculate();
+
+		console.info("calculateConsumption, ret=%s, l=%s, prevM=%s",ret,l,prevM);
+
+		if( ((ret-l)<500) && (ret>=l) ) {
+			prevM = m;
+			l = ret;
+			updated = true;
+		}
+}
+
+function updateThread() {
+		
+	return Promise.resolve()
 	.then(function(){
 		console.info("Start ocr");
-		return runCmd('sh ./src/ocrwater2.sh');
+		return runCmd('sh ./src/ocrwater.sh');
 	})
 	.then(function(c){
 		if(c!==undefined && (!isNaN(c)) && c!=="") {
 			c=parseInt(c);
-						
-			if(water.consumptionCumulative===undefined || water.previusHelper==undefined) {
-				water.previusHelper=c;
+		
+			if(l===undefined || isNaN(l)) {
 				try{
-					water.consumptionCumulative = revRecord.waterConsumption.cumulative;
+					l = revRecord.l;
 				} catch(err) {
-					console.info("Trying read fore previus waterConsumption %s", err);
-					water.consumptionCumulative = 0;
+					console.info("Trying read fore previus waterConsumption %s failed", err);
+					l = 0;
 				}
-				if(water.consumptionCumulative===undefined) water.consumptionCumulative = 0;
-				
+				if(isNaN(l)) l = 0;	
 			}
-			
-			console.info("current water consumption is %sm^3, water.previusHelper %sm^3, water.consumptionCumulative=%s, c=%s", c/10000, water.previusHelper/10000,water.consumptionCumulative, c);
-
-			var tmpConsumptionCumulative = water.consumptionCumulative;
-
-			if(c>=water.previusHelper) {
-				water.consumptionCumulative+=(c-water.previusHelper)/10000;
-			} else {
-				water.consumptionCumulative+=(c + (9999-water.previusHelper))/10000;
-			}
-			
-			if(isNaN(water.consumptionCumulative)) {
-				console.info("Something is wrong!!!. water consumption calculation failes, c=%s, tmpConsumptionCumulative=%s, water=%s", c, tmpConsumptionCumulative, JSON.stringify(water));
-				water.consumptionCumulative = tmpConsumptionCumulative;
-			} else { 
-				water.previusHelper = c;
-				var change = water.consumptionCumulative-tmpConsumptionCumulative;
-				console.info("water usage cumulative is %sm^3, change=%s", water.consumptionCumulative, change);
-				return {change:change,cumulative:water.consumptionCumulative};
-			}
+			console.info("Water consumption from meter %sl, --> %sl", c/10, l);	
+			calculateConsumption(c/10);
 		}
-	});*/
+	});
+}
+
+function read(c){
+	var ret;
+
+	if(updated){
+		ret = {"l":parseFloat(l).toFixed(1)};
+		updated = false;
+	}
+	return Promise.resolve(ret);
 }
 
 module.exports.read = read;

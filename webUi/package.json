@@ -12,6 +12,6 @@
 	"ds18b20":"0.1.0",
 	"serialport":"2.0.6",
 	"basic-auth":"1.0.3",
-	"superagent":"1.8.2"
+	"superagent":"1.8.3"
 	}
 }

@@ -19,6 +19,7 @@ var resolvePromise;
 sp.on('data', function(data) {
 	try{
 		json = JSON.parse(data);
+		json.kWh = json.energy * 1000;
 		console.info("kamstrup: " + data);
 	} catch(err){
 		console.error("kamstrup " + err);
