@@ -41,13 +41,15 @@ emonTX V2 Temperature and power pulse + Read of Kamstrup Multical 601 Heat meter
  */
 
 //********************************************Kamstrup Stuff Start********************************************
-#include <SoftwareSerial.h>
+#include "Json.h"
 
 double kamReadReg(unsigned short kreg);
 void kamSend(byte const *msg, int msgsize);
 double kamDecode(unsigned short const kreg, byte const *msg);
 unsigned short kamReceive(byte recvmsg[]);
 long crc_1021(byte const *inmsg, unsigned int len);
+
+Json json;
 
 //Kamstrup setup
 // Kamstrup Multical 601
@@ -263,42 +265,13 @@ void setup() {
 //while(1){
 //  Serial.println(kamSer.read());
 //}
-  Serial.println("{\"Kamstrup\":\"602\"}");
+  json.start();
+  json.add("deviceName","Kamstrup 602");
+  json.add("status", "started");
+  json.end();
   //kamSer2.begin(9600);
   //kamSer.print("a");
   //********************************************Kamstrup Stuff End********************************************
-}
-
-void printDouble( double val, byte precision){
- // prints val with number of decimal places determine by precision
- // precision is a number from 0 to 6 indicating the desired decimial places
- // example: lcdPrintDouble( 3.1415, 2); // prints 3.14 (two decimal places)
-
- if(val < 0.0){
-   Serial.print('-');
-   val = -val;
- }
-
- Serial.print (int(val));  //prints the int part
- if( precision > 0) {
-   Serial.print("."); // print the decimal point
-   unsigned long frac;
-   unsigned long mult = 1;
-   byte padding = precision -1;
-   while(precision--)
- mult *=10;
-
-   if(val >= 0)
-frac = (val - int(val)) * mult;
-   else
-frac = (int(val)- val ) * mult;
-   unsigned long frac1 = frac;
-   while( frac1 /= 10 )
-padding--;
-   while(  padding--)
-Serial.print("0");
-   Serial.print(frac,DEC) ;
- }
 }
 
 
@@ -315,34 +288,15 @@ void loop()
  }
 
   //********************************************Kamstrup Stuff End********************************************
-  Serial.print("{");
-  Serial.print("\"energy\":");
-  printDouble(emontx.Energy,5);
-  Serial.print(", ");
-
-  Serial.print("\"currentPower\": ");
-  printDouble(emontx.CurrentPower,2);
-  Serial.print(", ");
-
-  Serial.print("\"temperatureT1\": ");
-  printDouble(emontx.TemperatureT1,3);
-  Serial.print(", ");
-
-  Serial.print("\"temperatureT2\": ");
-  printDouble(emontx.TemperatureT2,3);
-  Serial.print(", ");
-
-  Serial.print("\"temperatureDiff\": ");
-  printDouble(emontx.TemperatureDiff,3);
-  Serial.print(", ");
-
-  Serial.print("\"flow\": ");
-  printDouble(emontx.Flow,3);
-  Serial.print(", ");
-
-  Serial.print("\"volumen1\": ");
-  printDouble(emontx.Volumen1,3);
-  Serial.println("}");
+  json.start();
+  json.add("energy",emontx.Energy,5);
+  json.add("currentPower", emontx.CurrentPower,2);
+  json.add("temperatureT1", emontx.TemperatureT1,3);
+  json.add("temperatureT2", emontx.TemperatureT2,3);
+  json.add("temperatureDiff", emontx.TemperatureDiff,3);
+  json.add("flow", emontx.Flow,3);
+  json.add("volumen1", emontx.Volumen1,3);
+  json.end();
 
   delay(POLLINTERVAL);
 
@@ -457,7 +411,9 @@ unsigned short kamReceive(byte recvmsg[]) {
 
     // handle rx timeout
     if (millis() - starttime > KAMTIMEOUT) {
-      Serial.println("Timed out listening for data");
+      json.start();
+      json.add("error", "Timed out listening for data");
+      json.end();
       return 0;
     }
 
@@ -481,8 +437,10 @@ unsigned short kamReceive(byte recvmsg[]) {
     if (rxdata[i] == 0x1b) {
       byte v = rxdata[i + 1] ^ 0xff;
       if (v != 0x06 and v != 0x0d and v != 0x1b and v != 0x40 and v != 0x80) {
-        Serial.print("Missing escape ");
-        Serial.println(v, HEX);
+            json.start();
+	    json.add("error","Missing escape");
+	    json.addArray("data", recvmsg, KAM_BUFFER_SIZE);
+	    json.end();
       }
       if(j<KAM_BUFFER_SIZE) recvmsg[j] = v;
       i++;                                                                                                                   // skip
@@ -495,7 +453,10 @@ unsigned short kamReceive(byte recvmsg[]) {
 
   // check CRC
   if (crc_1021(recvmsg, j)) {
-    Serial.println("CRC error: ");
+    json.start();
+    json.add("error","CRC error");
+    json.addArray("data", recvmsg, KAM_BUFFER_SIZE);
+    json.end();
     return 0;
   }
 
