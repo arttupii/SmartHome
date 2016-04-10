@@ -31,12 +31,12 @@ function update(){
 	console.info("Read measurements, timetamp=%d",timetamp);
 	
 	function readWater() {	
-		return watermeter.read()//.delay(5000)
+		/*return watermeter.read()//.delay(5000)
 		.then(function(value){
 			if(value!==undefined) {
 				updateRecordJson("waterMeter", value);
 			}
-		});
+		});*/
 	}
 
 	function readDS1820() {

@@ -16,9 +16,15 @@ function updateRecord(objectName, valueName,value) {
 	record[objectName][valueName] = value;
 }
 
+function keepArraySmall(){
+	if(records.length>=200){
+		records = records.slice(records.length-100, records.length);
+	}
+}
+
 function readRecordsFromFile(dataFile) {
 	try{
-		var file = fs.readFileSync(dataFile, 'utf8');
+		/*var file = fs.readFileSync(dataFile, 'utf8');
 		
 		file = file.split("\n");
 		records = [];
@@ -27,7 +33,11 @@ function readRecordsFromFile(dataFile) {
 			if(line.length>3) {
 				records.push(JSON.parse(line));
 			}
-		});
+			keepArraySmall();
+		});*/
+		var file = fs.readFileSync(dataFile + "_tmp", 'utf8');
+		records = JSON.parse(file);
+
 	} catch(err) {
 		console.error(err);
 	}
@@ -37,6 +47,7 @@ function readRecordsFromFile(dataFile) {
 function appendRecordToFile(fileName) {
 	console.info("Update " + fileName + " file");
 	fs.appendFileSync(fileName, JSON.stringify(record)+"\n",'utf8');
+	fs.writeFileSync(fileName + "_tmp", JSON.stringify(records));
 
 	var restApiObjects = {};
 	_.keys(record).forEach(function(devName){
@@ -65,6 +76,7 @@ function appendRecordToFile(fileName) {
 	});
 
 	records.push(JSON.parse(JSON.stringify(record)));
+	keepArraySmall();
 }
 
 function newRecord(timetamp) {

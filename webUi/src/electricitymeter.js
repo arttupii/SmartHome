@@ -24,7 +24,7 @@ function read(electronicMeter)	{
 				}
 				if(fixCounter===undefined) fixCounter = 0;
 			}
-			
+			console.info(JSON.stringify(revRecord));
 			console.info("electricity --> fixCounter:%s, counter=%s, pulseLength:%s", fixCounter, data.counter, data.pulseLength);
 			
 			var pulseLengthS = data.pulseLength / 1000 / 1000;	
@@ -36,7 +36,8 @@ function read(electronicMeter)	{
 			}
 			var changeWh = (kWh-prevkWh)*1000;
 			prevkWh = kWh;
-			return {"kWh": kWh, "pulseLength": data.pulseLength, "watt": watt, "Wh": changeWh, "counter": data.counter};
+
+			return {"kWh": kWh, "pulseLength": data.pulseLength, "watt": watt, "Wh": changeWh, "counter": data.counter + fixCounter};
 	
 		} else {
 			console.info("error during read electricity_consumption " + JSON.stringify(data));
