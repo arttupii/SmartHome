@@ -9,10 +9,10 @@ var watermeter = require('./watermeter.js');
 var emeter = require('./electricitymeter.js');
 var kamstrup = require('./kamstrup');
 var ds1820 = require('./ds1820');
-
+var serverInfo = require('./serverInfo');
 var tempSensors = [];
 var electronicMeter;
-
+var superagent = require('superagent');
 var data = {};
 
 function updateRecordJson(objName, json){
@@ -20,7 +20,22 @@ function updateRecordJson(objName, json){
 		_.keys(json).forEach(function(key){
 			datalogger.updateRecord(objName, key, json[key]);	
 		});
+		sendToEmoncms(objName, json);
+		
 	}
+}
+
+function sendToEmoncms(name, restApiObject){
+	superagent.parse = function(){};
+
+	var apiRequest = setup.emoncms.server + '/input/post.json?node=' + name + '&json=' + JSON.stringify(restApiObject) + '&apikey=' + setup.emoncms.apikey;
+	console.info(apiRequest);
+
+	superagent.get(apiRequest)
+	.end(function(err, res){
+		console.info("\n\n" + res + err); 
+	});
+
 }
 function update(){
 	var timetamp = new Date().getTime(); //minutes since 1970
@@ -31,12 +46,12 @@ function update(){
 	console.info("Read measurements, timetamp=%d",timetamp);
 	
 	function readWater() {	
-		/*return watermeter.read()//.delay(5000)
+		return watermeter.read()//.delay(5000)
 		.then(function(value){
 			if(value!==undefined) {
 				updateRecordJson("waterMeter", value);
 			}
-		});*/
+		});
 	}
 
 	function readDS1820() {
@@ -60,7 +75,16 @@ function update(){
 		updateRecordJson("kamstrup", json);
 	}
 
-	return Promise.all([readWater(), readDS1820(), readElectricityMeter(), readKamstrup()])
+	function readServerInfo() {
+		return serverInfo.read()
+		.then(function(data){
+			if(data!==undefined) {
+				updateRecordJson("serverInfo", data);
+			}
+		});
+	}
+
+	return Promise.all([readWater(), readDS1820(), readElectricityMeter(), readKamstrup(), readServerInfo()])
 	.then(function(){
 		datalogger.appendRecordToFile("./data/data.log");
 	});

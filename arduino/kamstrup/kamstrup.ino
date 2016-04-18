@@ -426,6 +426,7 @@ unsigned short kamReceive(byte recvmsg[]) {
         // append data
         rxdata[rxindex] = r;
         rxindex++;
+        if(rxindex>=sizeof(rxdata)) rxindex=sizeof(rxdata)-1;
       }
 
     }
@@ -442,11 +443,11 @@ unsigned short kamReceive(byte recvmsg[]) {
 	    json.addArray("data", recvmsg, KAM_BUFFER_SIZE);
 	    json.end();
       }
-      if(j<KAM_BUFFER_SIZE) recvmsg[j] = v;
+      if(j<=(KAM_BUFFER_SIZE-1)) recvmsg[j] = v;
       i++;                                                                                                                   // skip
     }
     else {
-      if(j<KAM_BUFFER_SIZE) recvmsg[j] = rxdata[i];
+      if(j<=(KAM_BUFFER_SIZE-1)) recvmsg[j] = rxdata[i];
     }
     j++;
   }

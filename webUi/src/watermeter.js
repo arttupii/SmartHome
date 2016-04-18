@@ -30,51 +30,13 @@ function runCmd(cmd) {
 	});
 }
 
-function update(){
-	updateThread()
-	.delay(10000)
-	.then(function(){
-		return updateThread();
-	})
-	.then(function(){
-		update();
-	});
-}
-update();
-
-
-var l;
-
-var updated = false;
-
-var prevM;
-function calculateConsumption(m) {
-		console.info("calculateConsumption, water --> ",m);
-		if(prevM===undefined) {
-			prevM = m;
-		}
-		
-		function calculate() {
-			var tmp = l;
-			if(prevM<=m){
-				tmp += m-prevM;		
-			} else {
-				tmp += m + (999.9-prevM)
-			}
-			return tmp;
-		}
-		
-		var ret = calculate();
-
-		console.info("calculateConsumption, ret=%s, l=%s, prevM=%s",ret,l,prevM);
-
-		if( ((ret-l)<500) && (ret>=l) ) {
-			prevM = m;
-			l = ret;
-			updated = true;
-		}
+function float2int (value) {
+    return value | 0;
 }
 
+var meterValue;
+
+var consuptionStarted = false;
 function updateThread() {
 		
 	return Promise.resolve()
@@ -82,33 +44,37 @@ function updateThread() {
 		console.info("Start ocr");
 		return runCmd('sh ./src/ocrwater.sh');
 	})
-	.then(function(c){
-		if(c!==undefined && (!isNaN(c)) && c!=="") {
-			c=parseInt(c);
+	.then(function(m){
+		if(m!==undefined && (!isNaN(m)) && m!=="") {
+			m=parseInt(m);
 		
-			if(l===undefined || isNaN(l)) {
+			if(meterValue===undefined || isNaN(meterValue)) {
 				try{
-					l = revRecord.l;
+					meterValue = Math.round(revRecord.value*10);
 				} catch(err) {
 					console.info("Trying read fore previus waterConsumption %s failed", err);
-					l = 0;
+					meterValue = m;
 				}
-				if(isNaN(l)) l = 0;	
+				if(isNaN(meterValue)) meterValue = m;	
 			}
-			console.info("Water consumption from meter %sl, --> %sl", c/10, l);	
-			calculateConsumption(c/10);
+		        
+			var prevM = meterValue;
+			meterValue = float2int(meterValue/10000)*10000 + m;
+			if( Math.abs(meterValue-prevM)>5000) {
+				meterValue += 10000;	
+			}
+			var change = meterValue-prevM;
+			if(change<0) change = 0;
+
+			console.info("Water consumption from meter %s", meterValue);
+
+			return {"value":meterValue/10, "change": change/10};
 		}
 	});
 }
 
-function read(c){
-	var ret;
-
-	if(updated){
-		ret = {"l":parseFloat(l).toFixed(1)};
-		updated = false;
-	}
-	return Promise.resolve(ret);
+function read(){
+	return updateThread();
 }
 
 module.exports.read = read;

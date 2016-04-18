@@ -20,9 +20,9 @@
             },
             "id": 0,
             "statusInfo": {
-                "offTime": "2016-04-08T13:37:57.848Z",
-                "onTime": "2016-04-07T04:00:00.789Z",
-                "lastEventReason": "maxOnTimer"
+                "offTime": "2016-04-18T06:00:00.061Z",
+                "onTime": "2016-04-18T04:00:00.952Z",
+                "lastEventReason": "timer"
             }
         },
         "1": {
@@ -45,8 +45,8 @@
                 }
             },
             "statusInfo": {
-                "onTime": "2016-04-07T04:30:00.105Z",
-                "offTime": "2016-04-07T05:00:00.635Z",
+                "onTime": "2016-04-18T04:30:00.310Z",
+                "offTime": "2016-04-18T05:00:00.697Z",
                 "lastEventReason": "timer"
             }
         },
