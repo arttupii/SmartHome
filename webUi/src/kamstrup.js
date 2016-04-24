@@ -27,5 +27,7 @@ sp.on('data', function(data) {
 });
 	
 module.exports.getData = function() {
-	return json;
+	var ret = json;
+	json = undefined;
+	return ret;
 };

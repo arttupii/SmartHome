@@ -128,9 +128,9 @@ void Json::addHexStr(const char* name, const unsigned char *val, int len){
 	Serial.print("\"");	
 }
 
+static char buf[50];
 void Json::add(const char* name, unsigned long long value) {
 	addDefault(name);
-	char buf[50];
 	longToStr2(buf, sizeof(buf), value);
 	Serial.print(buf);
 }
