@@ -1,10 +1,10 @@
 {
     "devices": {
         "0": {
-            "name": "Auton lämmitin",
+            "name": "Kasvihuone vesi",
             "powerOn": false,
             "dim": 0,
-            "maxOnTime": 180,
+            "maxOnTime": 1,
             "event": {
                 "repeatingEvent": {
                     "mo": true,
@@ -12,16 +12,16 @@
                     "we": true,
                     "th": true,
                     "fr": true,
-                    "sa": false,
-                    "su": false
+                    "sa": true,
+                    "su": true
                 },
-                "timeOn": "07:00",
-                "timeOff": "09:00"
+                "timeOn": "10:00",
+                "timeOff": "10:01"
             },
             "id": 0,
             "statusInfo": {
-                "offTime": "2016-04-21T12:45:02.008Z",
-                "onTime": "2016-04-21T04:00:00.343Z",
+                "offTime": "2016-07-06T07:01:00.619Z",
+                "onTime": "2016-07-06T07:00:00.465Z",
                 "lastEventReason": "maxOnTimer"
             }
         },
@@ -45,8 +45,8 @@
                 }
             },
             "statusInfo": {
-                "onTime": "2016-04-21T04:30:00.743Z",
-                "offTime": "2016-04-21T05:00:00.996Z",
+                "onTime": "2016-07-06T04:30:00.937Z",
+                "offTime": "2016-07-06T05:00:00.140Z",
                 "lastEventReason": "timer"
             }
         },
@@ -80,7 +80,7 @@
             "name": "Kytkin3",
             "powerOn": false,
             "dim": 0,
-            "maxOnTime": 0,
+            "maxOnTime": 1,
             "event": {
                 "timeOn": "",
                 "timeOff": "",
@@ -95,8 +95,8 @@
                 }
             },
             "statusInfo": {
-                "offTime": "2016-03-23T11:06:14.562Z",
-                "onTime": "2016-03-23T11:06:12.992Z",
+                "offTime": "2016-07-04T21:46:53.607Z",
+                "onTime": "2016-07-04T21:45:53.428Z",
                 "lastEventReason": "user"
             }
         }
