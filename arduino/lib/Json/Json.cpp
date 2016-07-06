@@ -134,7 +134,11 @@ void Json::add(const char* name, unsigned long long value) {
 	longToStr2(buf, sizeof(buf), value);
 	Serial.print(buf);
 }
-
+void Json::add(const char* name, unsigned long value) {
+	addDefault(name);
+	longToStr2(buf, sizeof(buf), value);
+	Serial.print(buf);
+}
 void Json::addDefault(const char *name) {
 	if(first==false) {
 		Serial.print(",");

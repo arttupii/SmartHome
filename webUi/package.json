@@ -10,7 +10,7 @@
 	"to-dot": "0.0.4",
 	"express-ws": "0.2.6",
 	"ds18b20":"0.1.0",
-	"serialport":"2.0.6",
+	"serialport":"4.0.0",
 	"basic-auth":"1.0.3",
 	"superagent":"1.8.3"
 	}

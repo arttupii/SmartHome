@@ -7,19 +7,29 @@ var SerialPort = serialport.SerialPort
 var usbSPath = require('./usbSerialAbsolutPath');
 
 setup.nexaSerialPort.config.parser = serialport.parsers.readline("\n");
-var sp = new SerialPort(usbSPath.getSerialPort(setup.nexaSerialPort.port, "NEXA"), setup.nexaSerialPort.config);
-
+var sp;
 var resolvePromise;
-sp.on('data', function(data) {
-  console.log('data received: ' + data);
-  if(resolvePromise!==undefined) {
-	  resolvePromise(data);
-	  resolvePromise=undefined;
-  }
-  trigNewJob();
-});
-	
-		
+
+if(setup.simulate) {
+  sp = {
+    write: function(){
+      trigNewJob();
+    }
+  };
+} else {
+  sp = new SerialPort(usbSPath.getSerialPort(setup.nexaSerialPort.port, "NEXA"), setup.nexaSerialPort.config);
+
+
+  sp.on('data', function(data) {
+    console.log('data received: ' + data);
+    if(resolvePromise!==undefined) {
+  	  resolvePromise(data);
+  	  resolvePromise=undefined;
+    }
+    trigNewJob();
+  });
+}
+
 var jobs = [];
 
 function trigNewJob(){
@@ -46,10 +56,10 @@ function sendCommand(cmd) {
 	}).then(function(data){
 		return JSON.parse(data);
 	});
-	
+
 	jobs.push([r, cmd, p]);
 	trigNewJob();
-	
+
 	return p;
 }
 

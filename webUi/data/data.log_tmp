@@ -32,7 +32,34 @@
 		"Thermal0": "55.0"
 	},
 	"waterMeter": {
-		"value": 1749.9,
-		"change": 0
+		"value": 16,
+		"change": 1,
+		"collection": {
+			"yearly": {
+				"reference": 13,
+				"updated": "2016-07-06T14:10:26.442Z"
+			},
+			"monthly": {
+				"reference": 13,
+				"updated": "2016-07-06T14:10:26.442Z"
+			},
+			"weekly": {
+				"reference": 1,
+				"updated": "2016-07-06T13:54:21.650Z"
+			},
+			"daily": {
+				"reference": 12,
+				"updated": "2017-06-07T15:09:09.560Z"
+			},
+			"hourly": {
+				"reference": 13,
+				"updated": "2016-07-06T14:10:26.442Z"
+			}
+		},
+		"yearly": 3,
+		"monthly": 3,
+		"weekly": 15,
+		"daily": 4,
+		"hourly": 3
 	}
 }

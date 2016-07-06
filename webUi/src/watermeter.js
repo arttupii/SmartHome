@@ -11,11 +11,11 @@ var timeHelper;
 function getTimeChange() {
 	var ret = 0;
 	var now = new Date().getTime()
-	if(timeHelper!==undefined){	
-		ret = now - timeHelper;	
-	} 
+	if(timeHelper!==undefined){
+		ret = now - timeHelper;
+	}
 	timeHelper = now;
-		
+
 	return ret;
 }
 
@@ -38,7 +38,15 @@ var meterValue;
 
 var consuptionStarted = false;
 function updateThread() {
-		
+	if(setup.simulate) {
+		if(meterValue==undefined) {
+			meterValue = 0;
+		}
+		meterValue += 10;
+		var change = 10;
+		return Promise.resolve({"value":meterValue/10, "change": change/10});
+	}
+	
 	return Promise.resolve()
 	.then(function(){
 		console.info("Start ocr");
@@ -47,7 +55,7 @@ function updateThread() {
 	.then(function(m){
 		if(m!==undefined && (!isNaN(m)) && m!=="") {
 			m=parseInt(m);
-		
+
 			if(meterValue===undefined || isNaN(meterValue)) {
 				try{
 					meterValue = Math.round(revRecord.value*10);
@@ -55,13 +63,13 @@ function updateThread() {
 					console.info("Trying read fore previus waterConsumption %s failed", err);
 					meterValue = m;
 				}
-				if(isNaN(meterValue)) meterValue = m;	
+				if(isNaN(meterValue)) meterValue = m;
 			}
-		        
+
 			var prevM = meterValue;
 			meterValue = float2int(meterValue/10000)*10000 + m;
 			if( Math.abs(meterValue-prevM)>5000) {
-				meterValue += 10000;	
+				meterValue += 10000;
 			}
 			var change = meterValue-prevM;
 			if(change<0) change = 0;
