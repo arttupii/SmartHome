@@ -125,7 +125,7 @@ function detectWaterLeakAndWarn(meter) {
 		this.meterValue = meter.value;
 	}
 
-	if(timeS(this.waterUsingStartedTime)>leakingDetectingTime || true) {
+	if(timeS(this.waterUsingStartedTime)>leakingDetectingTime) {
 			console.info("Water leak detected!!!!! change: %s, measurementTime: %s",  meter.value - this.meterValue, setup.waterLeakingDetect.leakingDetectingTime);
 			mailer.sendMail("Water leak detected!!!", JSON.stringify({
 				leakingDetectingTime: setup.waterLeakingDetect.leakingDetectingTime,

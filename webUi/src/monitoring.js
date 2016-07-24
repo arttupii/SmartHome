@@ -65,7 +65,7 @@ function update(){
 		return emeter.read(electronicMeter)
 		.then(function(data){
 			if(data!==undefined) {
-				var info = collectConsumtionInfo.update("electricityMeter", value.value);
+				var info = collectConsumtionInfo.update("electricityMeter", data.kWh);
 				updateRecordJson("electricityMeter", _.extend(data, info));
 			}
 		});
