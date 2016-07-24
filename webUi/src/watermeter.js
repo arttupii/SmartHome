@@ -1,5 +1,7 @@
 var _ = require('underscore');
 var fs = require('fs');
+var mailer = require('./mailer.js')
+
 var config = JSON.parse(fs.readFileSync("./config.json"));
 var setup = JSON.parse(fs.readFileSync("./setupfile.json"));
 var Promise = require('bluebird');
@@ -38,15 +40,6 @@ var meterValue;
 
 var consuptionStarted = false;
 function updateThread() {
-	if(setup.simulate) {
-		if(meterValue==undefined) {
-			meterValue = 0;
-		}
-		meterValue += 10;
-		var change = 10;
-		return Promise.resolve({"value":meterValue/10, "change": change/10});
-	}
-	
 	return Promise.resolve()
 	.then(function(){
 		console.info("Start ocr");
@@ -64,6 +57,7 @@ function updateThread() {
 					meterValue = m;
 				}
 				if(isNaN(meterValue)) meterValue = m;
+				console.info("Last meter value readed from file. " + meterValue);
 			}
 
 			var prevM = meterValue;
@@ -76,10 +70,74 @@ function updateThread() {
 
 			console.info("Water consumption from meter %s", meterValue);
 
-			return {"value":meterValue/10, "change": change/10};
+			var ret = {"value":meterValue/10, "change": change/10};
+
+			detectWaterLeakAndWarn(ret);
+
+			return ret;
 		}
 	});
 }
+
+function detectWaterLeakAndWarn(meter) {
+	var myself = this;
+	var now = new Date().getTime();
+	var leakingDetectingTime = setup.waterLeakingDetect.leakingDetectingTime;
+	var minimumWaterNotUsedTime = setup.waterLeakingDetect.resetTime;
+  var maxWaterConsumptionLiter = setup.waterLeakingDetect.maxWaterConsumptionLiter;
+
+	function timeS(t) {
+		if(t===undefined) return 0;
+		return (now-t)/1000;
+	}
+
+	if(meter.change>0) {
+		if(waterUsingStartedTime===undefined) {
+			this.waterUsingStartedTime = now;
+			this.meterValue = meter.value;
+		}
+		this.waterNotUsedTime = now;
+	} else {
+		if(this.waterNotUsedTime===undefined) {
+			this.waterNotUsedTime = now;
+		}
+	}
+  if(this.meterValue === undefined ) {
+		this.meterValue = meter.value;
+	}
+
+	console.info("waterUsingStartedTime %s, waterNotUsedTime =%s ", timeS(this.waterUsingStartedTime), timeS(this.waterNotUsedTime));
+	if(timeS(this.waterNotUsedTime)>minimumWaterNotUsedTime) {
+		this.waterUsingStartedTime = undefined;
+		this.meterValue = meter.value;
+	}
+
+	if(meter.value-this.meterValue>maxWaterConsumptionLiter) {
+		console.info("Water consumtion warning!!!!! change: %s, measurementTime: %s",  meter.value - this.meterValue, setup.waterLeakingDetect.leakingDetectingTime);
+		mailer.sendMail("Water consumtion Warning!!!", JSON.stringify({
+			leakingDetectingTime: setup.waterLeakingDetect.leakingDetectingTime,
+			change: meter.value - myself.meterValue,
+			maxWaterConsumptionLiter: maxWaterConsumptionLiter,
+			meterValue0: myself.meterValue,
+			meterValue1: meter.value
+		},0,3));
+		this.waterUsingStartedTime = undefined;
+		this.meterValue = meter.value;
+	}
+
+	if(timeS(this.waterUsingStartedTime)>leakingDetectingTime || true) {
+			console.info("Water leak detected!!!!! change: %s, measurementTime: %s",  meter.value - this.meterValue, setup.waterLeakingDetect.leakingDetectingTime);
+			mailer.sendMail("Water leak detected!!!", JSON.stringify({
+				leakingDetectingTime: setup.waterLeakingDetect.leakingDetectingTime,
+				change: meter.value - myself.meterValue,
+				meterValue0: myself.meterValue,
+				meterValue1: meter.value
+			},0,3));
+			this.waterUsingStartedTime = undefined;
+			this.meterValue = meter.value;
+	}
+}
+
 
 function read(){
 	return updateThread();

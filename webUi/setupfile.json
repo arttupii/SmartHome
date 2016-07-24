@@ -4,6 +4,17 @@
 	"listenPort": 8080,
 	"user": "notused",
 	"password": "notused",
+	"simulate": 0,
+	"smtpConfig": {
+	    "host": "smtp.kaisanet.net",
+	    "port": 465,
+	    "secure": true
+	},
+	"waterLeakingDetect": {
+		"leakingDetectingTime": 7200,
+		"resetTime": 3600,
+		"maxWaterConsumptionLiter": 60
+	},
 	"emoncms": {
 		"apikey": "8cf3bffd983137376e3c0fc358ee7db6",
 		"server": "http://127.0.0.1/emoncms",

@@ -1,17 +1,20 @@
 {
   "name": "Etakytkimet",
   "version": "0.0.1",
-  "scripts": {"start": "node src/server.js"},
+  "scripts": {
+    "start": "node src/server.js"
+  },
   "dependencies": {
-    "underscore": "1.8.3",
-	"express": "4.13.3",
-	"bluebird": "2.10.2",
-	"nested-structure": "1.0.4",
-	"to-dot": "0.0.4",
-	"express-ws": "0.2.6",
-	"ds18b20":"0.1.0",
-	"serialport":"4.0.0",
-	"basic-auth":"1.0.3",
-	"superagent":"1.8.3"
-	}
+    "basic-auth": "1.0.3",
+    "bluebird": "2.10.2",
+    "ds18b20": "0.1.0",
+    "express": "4.13.3",
+    "express-ws": "0.2.6",
+    "nested-structure": "1.0.4",
+    "nodemailer": "^2.5.0",
+    "serialport": "4.0.0",
+    "superagent": "1.8.3",
+    "to-dot": "0.0.4",
+    "underscore": "1.8.3"
+  }
 }

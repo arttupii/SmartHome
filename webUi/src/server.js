@@ -11,7 +11,7 @@ var nexa = require('./nexaandpowermeter');
 var ns = require('nested-structure');
 var toDot = require('to-dot');
 var monitoring = require('./monitoring.js');
-
+var mailer = require('./mailer.js')
 var server = express();
 server.use(express.static('./public'));
 
@@ -20,17 +20,17 @@ var controller_id = setup.controller_id;
 //var port = 8085;
 require('rconsole')
 console.set({
-  facility: 'local0'      // default: user 
-  , title: 'SmartHome'       // default: node -- can also be set with `process.title` 
-  , highestLevel: 'debug'  // [emerg, alert, crit, err, warning, notice, info, debug] 
-  , stdout: true         // default: false 
-  , stderr: true          // default: true 
-  , syslog: true          // default: true 
-  , syslogHashTags: false // default: false 
-  , showTime: true        // default: true  
-  , showLine: true        // default: true 
-  , showFile: true        // default: true 
-  , showTags: true        // default: true 
+  facility: 'local0'      // default: user
+  , title: 'SmartHome'       // default: node -- can also be set with `process.title`
+  , highestLevel: 'debug'  // [emerg, alert, crit, err, warning, notice, info, debug]
+  , stdout: true         // default: false
+  , stderr: true          // default: true
+  , syslog: true          // default: true
+  , syslogHashTags: false // default: false
+  , showTime: true        // default: true
+  , showLine: true        // default: true
+  , showFile: true        // default: true
+  , showTags: true        // default: true
 })
 */
 
@@ -47,7 +47,7 @@ var powerOffChangeDetected=false;
 app.use(function(req, res, next) {
     var auth;
 
-    // check whether an autorization header was send    
+    // check whether an autorization header was send
     if (req.headers.authorization) {
       auth = new Buffer(req.headers.authorization.substring(6), 'base64').toString().split(':');
     }
@@ -74,12 +74,12 @@ app.ws('/websocket', function(ws, req) {
 	ws.on('message', function(msg) {
 		console.log("Message " + msg);
 		msg = JSON.parse(msg);
-		
+
 		if(msg.cmd==='get') {
 			console.log("Asked all  " + msg);
 			sendToClient(ws,createMsg("all",config));
 		}
-		
+
 		if(msg.cmd==='update') {
 			var dotNotations = toDot(msg.data);
 			_.keys(dotNotations).forEach(function(dot){
@@ -143,7 +143,7 @@ function createMsg(cmd, data) {
 }
 
 app.listen(setup.listenPort);
-			
+
 function sendPortStatesToTarget(tryToSendCnt) {
 	return Promise.each(_.range(0,tryToSendCnt), function (){
 		return Promise.each(_.values(config.devices), function (device){
@@ -195,15 +195,15 @@ function checkTimers() {
 			//console.info("isNow(), %d:%d <--> %d:%d   --> ret=%d", t[0], t[1], now.getHours(), now.getMinutes(), ret);
 			return ret;
 		}
-		
+
 		function updatePowerOffState(device, state, reason) {
 			console.info("!!!!!Update power state to %s (timer), device=%d", state, device.id);
-			device.powerOn = state; 
+			device.powerOn = state;
 			powerOffChangeEvent(device, undefined, reason)
-			
+
 			fs.writeFileSync("./config.json", JSON.stringify(config,0,4));
 		}
-		
+
 		return Promise.each(_.values(config.devices), function (device){
 			var isTimeOn = isNow(device.event.timeOn);
 			var isTimeOff = isNow(device.event.timeOff);
@@ -216,14 +216,14 @@ function checkTimers() {
 				}
 				//console.info("DEBUG %s-%s = %s    --> %s --> %s", now, onTime, (now-onTime), device.maxOnTime, (now-onTime)>=device.maxOnTime);
 			}
-			
+
 			if( isTimeOn && device.powerOn===false || isTimeOff && device.powerOn===true ) {
 				var setPowerOn = true;
 				if(isTimeOff) setPowerOn = false;
-				
-				if(device.event.repeatingEvent.ma || device.event.repeatingEvent.tu || 
-				device.event.repeatingEvent.we || device.event.repeatingEvent.th || 
-				device.event.repeatingEvent.fr || device.event.repeatingEvent.sa  || 
+
+				if(device.event.repeatingEvent.ma || device.event.repeatingEvent.tu ||
+				device.event.repeatingEvent.we || device.event.repeatingEvent.th ||
+				device.event.repeatingEvent.fr || device.event.repeatingEvent.sa  ||
 				device.event.repeatingEvent.su ) {
 					var now = new Date();
 					switch(now.getDay()) {
@@ -234,7 +234,7 @@ function checkTimers() {
 						case 4: if(device.event.repeatingEvent.th) {updatePowerOffState(device, setPowerOn, "timer");} break;
 						case 5: if(device.event.repeatingEvent.fr) {updatePowerOffState(device, setPowerOn, "timer");} break;
 						case 6: if(device.event.repeatingEvent.sa) {updatePowerOffState(device, setPowerOn, "timer");} break;
-					}	
+					}
 				} else {
 					if(isTimeOn) device.event.timeOn = "";
 					if(isTimeOff) device.event.timeOff = "";
@@ -243,7 +243,7 @@ function checkTimers() {
 			}
 		}).catch(function (err){
 			console.error(err);
-		});	
+		});
 	}
 }
 
@@ -266,4 +266,5 @@ function updateLoop() {
 		});
 }
 updateLoop();
- 
+
+//mailer.sendMail("SmartHome - started", "");
