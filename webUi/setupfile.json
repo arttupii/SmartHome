@@ -12,7 +12,7 @@
 	},
 	"waterLeakingDetect": {
 		"leakingDetectingTime": 7200,
-		"resetTime": 3600,
+		"resetTime": 1800,
 		"maxWaterConsumptionLiter": 60
 	},
 	"emoncms": {

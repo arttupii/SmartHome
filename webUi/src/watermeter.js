@@ -85,57 +85,88 @@ function detectWaterLeakAndWarn(meter) {
 	var leakingDetectingTime = setup.waterLeakingDetect.leakingDetectingTime;
 	var minimumWaterNotUsedTime = setup.waterLeakingDetect.resetTime;
   var maxWaterConsumptionLiter = setup.waterLeakingDetect.maxWaterConsumptionLiter;
-
 	function timeS(t) {
 		if(t===undefined) return 0;
-		return (now-t)/1000;
+			return (now-t)/1000;
 	}
 
-	if(meter.change>0) {
-		if(waterUsingStartedTime===undefined) {
-			this.waterUsingStartedTime = now;
-			this.meterValue = meter.value;
-		}
-		this.waterNotUsedTime = now;
-	} else {
-		if(this.waterNotUsedTime===undefined) {
-			this.waterNotUsedTime = now;
-		}
+	meter = JSON.parse(JSON.stringify(meter));
+	if(myself.watermeterArray===undefined) {
+		myself.watermeterArray = [];
 	}
-  if(this.meterValue === undefined ) {
-		this.meterValue = meter.value;
+	meter.timestamp = now;
+	myself.watermeterArray.push(meter);
+
+	var analysingArrayIsFull = false;
+	//remove old records
+  while(myself.watermeterArray.length>=1 && (timeS(myself.watermeterArray[0].timestamp) >= leakingDetectingTime)) {
+		myself.watermeterArray.splice(0,1);
+		analysingArrayIsFull = true;
 	}
 
-	console.info("waterUsingStartedTime %s, waterNotUsedTime =%s ", timeS(this.waterUsingStartedTime), timeS(this.waterNotUsedTime));
-	if(timeS(this.waterNotUsedTime)>minimumWaterNotUsedTime) {
-		this.waterUsingStartedTime = undefined;
-		this.meterValue = meter.value;
-	}
+	function maxWaterConsumption() {
+		var waterConsumption = myself.watermeterArray[myself.watermeterArray.length-1].value-myself.watermeterArray[0].value;
+		var timeRange = timeS(myself.watermeterArray[0].timestamp);
 
-	if(meter.value-this.meterValue>maxWaterConsumptionLiter) {
-		console.info("Water consumtion warning!!!!! change: %s, measurementTime: %s",  meter.value - this.meterValue, setup.waterLeakingDetect.leakingDetectingTime);
-		mailer.sendMail("Water consumtion Warning!!!", JSON.stringify({
-			leakingDetectingTime: setup.waterLeakingDetect.leakingDetectingTime,
-			change: meter.value - myself.meterValue,
-			maxWaterConsumptionLiter: maxWaterConsumptionLiter,
-			meterValue0: myself.meterValue,
-			meterValue1: meter.value
-		},0,3));
-		this.waterUsingStartedTime = undefined;
-		this.meterValue = meter.value;
-	}
+		console.info("DetectWaterLeak: Water consuption is %s, timeRange: %s", waterConsumption, timeRange);
 
-	if(timeS(this.waterUsingStartedTime)>leakingDetectingTime) {
-			console.info("Water leak detected!!!!! change: %s, measurementTime: %s",  meter.value - this.meterValue, setup.waterLeakingDetect.leakingDetectingTime);
-			mailer.sendMail("Water leak detected!!!", JSON.stringify({
+		if(myself.watermeterArray[0].consumtionWarning!==true &&
+			waterConsumption>=maxWaterConsumptionLiter) {
+
+			myself.watermeterArray.forEach(function(m){
+				m.consumtionWarning = true;
+			});
+
+			console.info("Water consumtion warning!!!!!");
+			mailer.sendMail("Water consumtion Warning!!!", JSON.stringify({
 				leakingDetectingTime: setup.waterLeakingDetect.leakingDetectingTime,
-				change: meter.value - myself.meterValue,
-				meterValue0: myself.meterValue,
-				meterValue1: meter.value
+				change: waterConsumption,
+				maxWaterConsumptionLiter: maxWaterConsumptionLiter,
+				meterValue0: myself.watermeterArray[0].value,
+				meterValue1: myself.watermeterArray[myself.watermeterArray.length-1]
 			},0,3));
-			this.waterUsingStartedTime = undefined;
-			this.meterValue = meter.value;
+		}
+	 }
+
+	function waterLeak() {
+		var waterNotUsedLongestTime = 0;
+		var timeRange = timeS(myself.watermeterArray[0].timestamp);
+		var change = myself.watermeterArray[myself.watermeterArray.length-1].value-myself.watermeterArray[0].value;
+
+		for(var i=0;i<myself.watermeterArray.length;i++) {
+			var m0=myself.watermeterArray[i];
+			for(var x=i;x<myself.watermeterArray.length;x++) {
+				var m1=myself.watermeterArray[x];
+				if(m0.value===m1.value) {
+				 var t = (m1.timestamp - m0.timestamp)/1000;
+				 if(t>waterNotUsedLongestTime) {
+					 waterNotUsedLongestTime = t;
+				 }
+				} else {
+					break;
+				}
+			}
+		}
+		console.info("Longest not used water time is %ss, timerange: ", waterNotUsedLongestTime, timeRange);
+
+		if(myself.watermeterArray[myself.watermeterArray.length-1].value!==myself.watermeterArray[0].value) {
+			if(waterNotUsedLongestTime<=minimumWaterNotUsedTime &&
+				myself.watermeterArray[0].leakWarning!==true && analysingArrayIsFull) {
+				myself.watermeterArray.forEach(function(m){
+					m.leakWarning = true;
+				});
+
+				console.info("Water leak detected!!!!! change: %s, measurementTime: %s",  change, timeRange);
+				mailer.sendMail("Water leak detected!!!", JSON.stringify({
+					leakingDetectingTime: setup.waterLeakingDetect.leakingDetectingTime,
+					change: change,
+					timeRange: timeRange
+				},0,3));
+			}
+		}
 	}
+	maxWaterConsumption();
+	waterLeak();
 }
 
 
