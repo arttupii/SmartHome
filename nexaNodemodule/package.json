@@ -10,5 +10,9 @@
   "gypfile": true,
   "dependencies": {
     "bindings": "~1.2.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/arttupii/SmartHome.git"
   }
 }
