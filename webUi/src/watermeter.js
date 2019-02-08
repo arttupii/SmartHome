@@ -68,6 +68,12 @@ function updateThread() {
 			var change = meterValue-prevM;
 			if(change<0) change = 0;
 
+                        if(Math.abs(meterValue-prevM)<5) {
+                            if(prevM>meterValue) {
+                                meterValue=prevM;
+                            }
+                        }
+
 			console.info("Water consumption from meter %s", meterValue);
 
 			var ret = {"value":meterValue/10, "change": change/10};

@@ -15,6 +15,76 @@
 		"resetTime": 1800,
 		"maxWaterConsumptionLiter": 60
 	},
+	"cayenne": {
+		"kamstrup": {
+			"options": {
+				"clientId" : "8cdf6c50-1eb0-11e8-9beb-4d400e603e7e",
+			 	"username" : "986076e0-fea0-11e6-87a1-6fafaf6c4401",
+			  	"password" : "b7e5e336aa0d976797b599da17f24d1549081903"
+			},
+			"channelMap": {
+				"energy":	       {"ch": 0,"type": "raw"} ,
+				"currentPower":    {"ch": 1,"type": "raw"} ,
+				"temperatureT1":   {"ch": 3,"type": "temp"} ,
+				"temperatureT2":   {"ch": 4,"type": "temp"} ,
+				"temperatureDiff": {"ch": 5,"type": "temp"} ,
+				"flow":            {"ch": 6,"type": "raw"} ,
+				"volumen1":        {"ch": 7,"type": "raw"} 
+			}
+		},
+		"waterMeter": {
+			"options": {
+				"clientId" : "9d030370-1ee3-11e8-96c3-51e4789cd606",
+			 	"username" : "986076e0-fea0-11e6-87a1-6fafaf6c4401",
+			  	"password" : "b7e5e336aa0d976797b599da17f24d1549081903"
+			},
+			"channelMap": {
+				"value":          {"ch": 0,"type": "raw"} ,
+				"change":         {"ch": 1,"type": "raw"} ,
+				"yearly":         {"ch": 2,"type": "raw"} ,
+				"monthly":        {"ch": 3,"type": "raw"} ,
+				"weekly":         {"ch": 4,"type": "raw"} ,
+				"daily":          {"ch": 5,"type": "raw"} ,
+				"hourly":         {"ch": 6,"type": "raw"}
+			}
+		},
+		"electricityMeter": {
+			"options": {
+				"clientId" : "cc49ca30-1ed7-11e8-aa1d-e5677d2125ce",
+			 	"username" : "986076e0-fea0-11e6-87a1-6fafaf6c4401",
+			  	"password" : "b7e5e336aa0d976797b599da17f24d1549081903"
+			},
+			"channelMap": {
+				"kWh":           {"ch": 0,"type": "raw"} ,
+				"pulseLength":   {"ch": 1,"type": "raw"} ,
+				"watt":          {"ch": 2,"type": "raw"} ,
+				"Wh":            {"ch": 3,"type": "raw"} ,
+				"counter":       {"ch": 4,"type": "raw"} ,
+				"yearly":        {"ch": 5,"type": "raw"} ,
+				"monthly":       {"ch": 6,"type": "raw"} ,
+				"weekly":        {"ch": 7,"type": "raw"},
+				"daily":         {"ch": 8,"type": "raw"} ,
+				"hourly":        {"ch": 9,"type": "raw"}
+			}
+		},
+		"ds1820": {
+			"options": {
+				"clientId" : "f99f9ff0-1ed7-11e8-af7b-4f8845dd6501",
+			 	"username" : "986076e0-fea0-11e6-87a1-6fafaf6c4401",
+			  	"password" : "b7e5e336aa0d976797b599da17f24d1549081903"
+			},
+			"channelMap": {
+				"28-0000038e015e":       {"ch": 0,"type": "temp"} ,
+				"28-0000038e0b35":       {"ch": 1,"type": "temp"} ,
+				"28-0000038de0b7":       {"ch": 2,"type": "temp"} ,
+				"28-0415a32c80ff":       {"ch": 3,"type": "temp"} ,
+				"28-0315a31e98ff":       {"ch": 4,"type": "temp"} ,
+				"28-0415a35222ff":       {"ch": 5,"type": "temp"} ,
+				"28-0415a3057dff":       {"ch": 6,"type": "temp"}
+			}
+		}
+
+	},
 	"emoncms": {
 		"apikey": "8cf3bffd983137376e3c0fc358ee7db6",
 		"server": "http://127.0.0.1/emoncms",

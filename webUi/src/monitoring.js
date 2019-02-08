@@ -13,6 +13,7 @@ var serverInfo = require('./serverInfo');
 var tempSensors = [];
 var electronicMeter;
 var superagent = require('superagent');
+var cayenne = require('./cayenne');
 
 var collectConsumtionInfo = require('./collectConsumtionInfo');
 
@@ -22,6 +23,7 @@ function updateRecordJson(objName, json){
 			datalogger.updateRecord(objName, key, json[key]);
 		});
 		sendToEmoncms(objName, json);
+		cayenne.send(objName, json);
 	}
 }
 

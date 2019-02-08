@@ -7,7 +7,6 @@ var serialport = require("serialport");
 var SerialPort = serialport.SerialPort
 var usbSPath = require('./usbSerialAbsolutPath');
 
-
 var serialSetup = setup.kamstrupSerialPort;
 
 var json;
