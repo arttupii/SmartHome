@@ -1,0 +1,19 @@
+{
+   "28-0000038e015e": 63,
+   "28-0000038e0b35": 64,
+   "28-0000038de0b7": 65,
+   "28-0415a32c80ff": 66,
+   "28-0315a31e98ff": 67,
+   "28-0415a35222ff": 68,
+   "kamstrup_temperatureT1": 69,
+   "kamstrup_temperatureT2": 70,
+   "kamstrup_temperatureDiff": 71,
+   "kamstrup_flow": 72,
+   "kamstrup_volumen1": 81,
+   "kamstrup_kWh": 87,
+   "electricityMeter": 76,
+   "waterMeterLPerMin": 78,
+   "28-0415a3057dff": 74,
+   "waterMeterValue": 79,
+   "waterChange": 100
+}
