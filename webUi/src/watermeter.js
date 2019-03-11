@@ -39,6 +39,7 @@ function float2int (value) {
 var meterValue;
 
 var consuptionStarted = false;
+var lastTime = new Date().getMilliseconds()/1000;
 function updateThread() {
 	return Promise.resolve()
 	.then(function(){
@@ -48,7 +49,7 @@ function updateThread() {
 	.then(function(m){
 		if(m!==undefined && (!isNaN(m)) && m!=="") {
 			m=parseInt(m);
-
+			var now = new Date().getMilliseconds()/1000;
 			if(meterValue===undefined || isNaN(meterValue)) {
 				try{
 					meterValue = Math.round(revRecord.value*10);
@@ -74,12 +75,12 @@ function updateThread() {
                             }
                         }
 
-			console.info("Water consumption from meter %s", meterValue);
+			console.info("!!!!!!!Water consumption from meter %s", meterValue, change/10/((now-lastTime)/60));
 
-			var ret = {"value":meterValue/10, "change": change/10};
+			var ret = {"value":meterValue/10, "change": change/10, "lPerMin": change};
 
 			detectWaterLeakAndWarn(ret);
-
+			lastTime = now;
 			return ret;
 		}
 	});

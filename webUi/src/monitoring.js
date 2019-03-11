@@ -13,7 +13,7 @@ var serverInfo = require('./serverInfo');
 var tempSensors = [];
 var electronicMeter;
 var superagent = require('superagent');
-var cayenne = require('./cayenne');
+var domoticz = require('./domoticz');
 
 var collectConsumtionInfo = require('./collectConsumtionInfo');
 
@@ -22,23 +22,9 @@ function updateRecordJson(objName, json){
 		_.keys(json).forEach(function(key){
 			datalogger.updateRecord(objName, key, json[key]);
 		});
-		sendToEmoncms(objName, json);
-		cayenne.send(objName, json);
 	}
 }
 
-function sendToEmoncms(name, restApiObject){
-	superagent.parse = function(){};
-
-	var apiRequest = setup.emoncms.server + '/input/post.json?node=' + name + '&json=' + JSON.stringify(restApiObject) + '&apikey=' + setup.emoncms.apikey;
-	console.info(apiRequest);
-
-	superagent.get(apiRequest)
-	.end(function(err, res){
-		console.info("\n\n" + res + err);
-	});
-
-}
 function update(){
 	var timetamp = new Date().getTime(); //minutes since 1970
 	var index = 0;
@@ -52,6 +38,10 @@ function update(){
 			if(value!==undefined) {
 				var info = collectConsumtionInfo.update("waterMeter", value.value);
 				updateRecordJson("waterMeter", _.extend(value, info));
+				domoticz.updateWaterflow("waterMeterLPerMin", value.lPerMin);
+				domoticz.updateManagedCounter("waterMeterValue", value.value);
+				domoticz.updateWaterChance("waterChange",  value.change);
+				
 			}
 		});
 	}
@@ -60,6 +50,9 @@ function update(){
 		//read temperature sensors
 		var json = ds1820.getData();
 		updateRecordJson("ds1820", json);
+		_.keys(json).forEach(function(key){
+			domoticz.updateTemp(key, json[key]);
+		});
 	}
 
 
@@ -69,13 +62,25 @@ function update(){
 			if(data!==undefined) {
 				var info = collectConsumtionInfo.update("electricityMeter", data.kWh);
 				updateRecordJson("electricityMeter", _.extend(data, info));
+				domoticz.updateElectricity("electricityMeter",data.watt, data.kWh);
+
 			}
 		});
 	}
 
 	function readKamstrup() {
 		var json = kamstrup.getData();
-		updateRecordJson("kamstrup", json);
+		if(json) {
+			updateRecordJson("kamstrup", json);
+			
+			//domoticz.updateTemp("kamstrup_energy",json.energy
+			domoticz.updateTemp("kamstrup_temperatureT1", json.temperatureT1);
+			domoticz.updateTemp("kamstrup_temperatureT2", json.temperatureT2);
+			domoticz.updateTemp("kamstrup_temperatureDiff", json.temperatureDiff);
+			domoticz.updateWaterflow("kamstrup_flow", json.flow/60);
+			domoticz.updateManagedCounter("kamstrup_volumen1",json.volumen1);
+			domoticz.updateElectricity("kamstrup_kWh",json.currentPower*1000, json.kWh);
+		}
 	}
 
 	function readServerInfo() {
@@ -98,7 +103,7 @@ Promise.try(function(){
 	emeter.initialize(datalogger.data()["electricityMeter"]);
 	watermeter.initialize(datalogger.data()["waterMeter"]);
 })
-.delay(10000)
+.delay(60000)
 .then(function(){
 	update();
 	setInterval(update, setup.emoncms.updateFrequency);

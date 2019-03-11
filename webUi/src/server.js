@@ -4,7 +4,7 @@ var app = express();
 var expressWs = require('express-ws')(app);
 var basicAuth = require('basic-auth');
 var fs = require('fs');
-var config = JSON.parse(fs.readFileSync("./config.json"));
+//var config = JSON.parse(fs.readFileSync("./config.json"));
 var setup = JSON.parse(fs.readFileSync("./setupfile.json"));
 var Promise = require('bluebird');
 var nexa = require('./nexaandpowermeter');
@@ -39,7 +39,7 @@ console.set({
 });*/
 
 monitoring.initialize(nexa);
-
+/*
 var powerOffChangeDetected=false;
 
 /*
@@ -66,7 +66,7 @@ app.use(function(req, res, next) {
     }
 });
 */
-
+/*
 app.use(express.static('./public'));
 
 
@@ -265,6 +265,7 @@ function updateLoop() {
 			return updateLoop();
 		});
 }
-updateLoop();
+//updateLoop();
 
 //mailer.sendMail("SmartHome - started", "");
+*/
